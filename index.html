@@ -8,7 +8,7 @@
   :root{
     --bg1:#dff7d6;
     --bg2:#b6e07f;
-    --accent:#56ab2f;
+    --accent:#8e988a;
     --dark:#21421b;
     --muted:#8dbb75;
     --card:#f0fbe9;
@@ -164,6 +164,10 @@
     <!-- Sidebar -->
     <aside class="sidebar" aria-label="Navigation">
       <div class="brand">EcoLearn</div>
+      <!--  Streak Feature (Palak) -->
+    <div id="streakLabel" style="margin:10px 0; font-weight:600; color:#e65100;">
+       0 day streak
+    </div>
       <button class="nav-btn active" data-target="dash">About</button>
       <button class="nav-btn" data-target="learn">Learn</button>
       <button class="nav-btn" data-target="quiz">Quiz</button>
@@ -828,6 +832,41 @@ function renderLeaderboard(){
   // ensure first view is Dashboard
   showSection('dash');
 })();
+
+/* ----------------------
+   Streak Feature (Palak)
+   ---------------------- */
+let streak = 0;
+let lastStreakDate = null;
+
+const streakData = JSON.parse(localStorage.getItem("ecolearn_streak")) || { streak: 0, lastDate: null };
+streak = streakData.streak;
+lastStreakDate = streakData.lastDate;
+
+function renderStreak() {
+  const el = document.getElementById("streakLabel");
+  if (el) {
+    el.textContent = `🔥 ${streak} day streak`;
+  }
+}
+
+function updateStreak() {
+  const today = new Date().toDateString();
+
+  if (lastStreakDate !== today) {
+    if (lastStreakDate === new Date(Date.now() - 86400000).toDateString()) {
+      streak++;
+    } else {
+      streak = 1;
+    }
+    lastStreakDate = today;
+    localStorage.setItem("ecolearn_streak", JSON.stringify({ streak, lastDate: lastStreakDate }));
+  }
+  renderStreak();
+}
+
+updateStreak();
+
 </script>
 </body>
 </html>
