@@ -1,3 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EcoLearn — Gamified Environmental Education</title>
+<style>
+  :root{
+    --bg1:#dff7d6;
+    --bg2:#b6e07f;
+    --accent:#3da648;
+    --accent-2:#56ab2f;
+    --dark:#1f3b1a;
+    --muted:#8dbb75;
+    --card:#f5fbef;
+    --ink:#10240d;
+    --glass:rgba(255,255,255,0.55);
+  }
+  [data-theme='dark']{
+    --bg1:#0b1410; --bg2:#072014; --card:#0f1a14; --ink:#eaf7e9; --muted:#6aa86d; --glass: rgba(255,255,255,0.04);
+  }
+  *{box-sizing:border-box;font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;}
+  html,body{height:100%;}
+  body{
+    margin:0;min-height:100vh;color:var(--dark);
+    background: radial-gradient(1200px 800px at 10% -10%, #e9fbdf 0%, #c8efa2 35%, #b8e184 55%, #b3df7c 70%, #a9d36f 100%) fixed;
+    overflow-x:hidden;transition:background .45s ease, color .25s ease;
+  }
+  body[data-theme='dark']{ background: radial-gradient(1200px 800px at 10% -10%, #07110b 0%, #08301b 35%, #0a3a1f 55%); color:var(--ink)}
+
+  /* Background blobs (animated) */
+  body::before, body::after{content:"";position:fixed;inset:auto;z-index:-1;filter: blur(60px);opacity:.45;pointer-events:none;width:520px;height:520px;border-radius:50%;background: radial-gradient(closest-side, #9be271, transparent);animation: floatBlob 22s ease-in-out infinite}
+  body::before{left:-120px;top:-120px}
+  body::after{right:-160px;bottom:-160px;animation-duration:26s;animation-delay:-4s}
+  @keyframes floatBlob{0%{transform:translateY(0) scale(1)}50%{transform:translateY(18px) scale(1.06)}100%{transform:translateY(0) scale(1)}}
+
+  /* Themed animated overlays */
+  .theme-water::before{content:"";position:fixed;left:0;top:0;width:100%;height:100%;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 10% 10%, rgba(10,150,200,0.06), transparent 10%), linear-gradient(180deg, rgba(8,18,20,0.02), transparent);}
+  .theme-water .right canvas{box-shadow:0 20px 60px rgba(0,110,170,0.18)}
+  .theme-energy::before{content:"";position:fixed;left:0;top:0;width:100%;height:100%;z-index:-2;pointer-events:none;background:radial-gradient(circle at 80% 20%, rgba(255,220,120,0.05), transparent 10%)}
+  .theme-agriculture::before{content:"";position:fixed;left:0;top:0;width:100%;height:100%;z-index:-2;pointer-events:none;background:radial-gradient(circle at 20% 80%, rgba(120,200,100,0.04), transparent 10%)}
+
+  /* App container */
+  .app {width:100%;max-width:1100px;margin:32px auto;padding:18px;display:flex;gap:18px;align-items:flex-start;}
+
+  /* Card base */
+  .card {background:linear-gradient(180deg,var(--card),#eef9e6);border-radius:16px;padding:18px;box-shadow: 0 10px 30px rgba(41,77,29,.08), inset 0 0 40px 4px rgba(158,210,118,0.10);backdrop-filter:saturate(1.1);transition: box-shadow .25s ease, transform .25s ease;}
+  .card:hover{transform:translateY(-2px);box-shadow: 0 14px 36px rgba(41,77,29,.12), inset 0 0 40px 6px rgba(158,210,118,0.12)}
+  [data-theme='dark'] .card{background:linear-gradient(180deg,var(--card),#0f2a17);box-shadow: 0 8px 30px rgba(0,0,0,.5)}
+
+  /* Sidebar */
+  .sidebar {width:220px;background:linear-gradient(180deg, #d6f5be, #b9e283);border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(21,64,12,0.10);display:flex;flex-direction:column;gap:12px;position:sticky;top:24px;align-self:stretch}
+  [data-theme='dark'] .sidebar{background:linear-gradient(180deg,#0c2414,#082011)}
+  .brand { font-weight:900; font-size:20px; color:var(--ink); text-align:center; padding:6px 0; letter-spacing:.5px; }
+  .userbox{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:linear-gradient(180deg,#ffffffb8,#ecf8e5b8);box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);cursor:pointer}
+  [data-theme='dark'] .userbox{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
+  .avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#0f2612;user-select:none;box-shadow:0 4px 10px rgba(0,0,0,.06);transition:transform .2s ease}
+  .avatar:hover{transform:scale(1.03)}
+  .avatar.small{width:28px;height:28px;font-size:12px}
+  .user-meta{display:flex;flex-direction:column;line-height:1.1}
+  .user-name{font-weight:800}
+  .user-sub{font-size:12px;opacity:.7}
+
+  .nav-list{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .nav-btn {appearance:none;border:none;background:linear-gradient(180deg,#ffffff,#eefdde);color:var(--dark);padding:10px 12px;border-radius:999px;cursor:pointer;font-weight:800;box-shadow:0 3px 8px rgba(0,0,0,0.06);transition: all .18s ease;position:relative;overflow:hidden}
+  .nav-btn::after{content:"";position:absolute;left:0;top:0;height:100%;width:0;background:linear-gradient(90deg, rgba(86,171,47,.18), rgba(86,171,47,.28));transition:width .35s ease}
+  .nav-btn:hover::after{width:100%}
+  .nav-btn.active { background:linear-gradient(180deg, var(--accent), #2e8f3d); color:#fff; box-shadow:0 10px 24px rgba(37,99,22,0.24); transform:translateY(-1px); }
+  .nav-btn.logout { background:#e46b6b; color:#fff; }
+  .small { font-size:12px; color:rgba(0,0,0,0.55); text-align:center; margin-top:6px; }
+  [data-theme='dark'] .small{color:rgba(255,255,255,0.65)}
+
+  /* Main area */
+  .main { flex:1; display:flex; flex-direction:column; gap:14px; }
+
+  /* Top row */
+  .top-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .welcome { font-size:22px; font-weight:900; color:var(--Ink); letter-spacing:.2px}
+  .controls{display:flex;align-items:center;gap:8px}
+  .stats { display:flex; gap:10px; align-items:center; }
+  .stat-bubble { background:linear-gradient(180deg,#fff,#e6f8de); padding:8px 12px; border-radius:999px; font-weight:800; box-shadow:0 3px 10px rgba(0,0,0,0.06); display:flex; gap:6px; align-items:center }
+  .stat-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(86,171,47,.18)}
+  .count-animate{transition: transform .2s ease}
+
+  /* Sections */
+  .section { display:none; opacity:0; transform: translateY(8px); pointer-events:none; }
+  .section.active { display:block; animation: sectionIn .35s ease; opacity:1; transform:none; pointer-events:auto; }
+  @keyframes sectionIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* Learn layout */
+  .domains-grid { display:flex; gap:12px; flex-wrap:wrap; margin-top:12px; }
+  .domain-card { flex: 1 1 calc(50% - 12px); min-width:160px; background: linear-gradient(180deg,#eaf9db,#d1f0b4); padding:14px; border-radius:14px; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,0.05); font-weight:800; text-align:center; transition: transform .18s ease, box-shadow .18s ease; position:relative; overflow:hidden }
+  .domain-card:hover { transform:translateY(-6px) scale(1.02); box-shadow:0 14px 28px rgba(0,0,0,0.10); }
+  .domain-card::after{content:""; position:absolute; left:-20%; top:-120%; width:60%; height:300%; background: radial-gradient(closest-side, rgba(255,255,255,.65), transparent 70%); transform:rotate(20deg); filter:blur(10px); animation: sheen 3s linear infinite; opacity:.6}
+  @keyframes sheen { from{ transform: translateX(-120%) rotate(20deg)} to{ transform: translateX(320%) rotate(20deg) } }
+  .domain-selected { outline:3px solid rgba(86,171,47,0.18); }
+
+  /* Split */
+  .split { display:flex; gap:16px; margin-top:10px; align-items:stretch; }
+  .left { flex:1; min-width:220px; background:linear-gradient(180deg,#f6fff0,#e9f7d6); border-radius:14px; padding:14px; position:relative; overflow:hidden }
+  .left::after{content:""; position:absolute; right:-40px; bottom:-40px; width:160px; height:160px; border-radius:50%; background: radial-gradient(closest-side, rgba(86,171,47,.18), transparent 70%); filter:blur(10px)}
+  .right { width:480px; max-width:46%; min-width:280px; background:linear-gradient(180deg,#f7fff8,#e9fdf0); border-radius:14px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .topic-title { font-size:18px; font-weight:900; margin-bottom:6px; color:var(--dark); }
+  .topic-text { color:#2e4e2a; line-height:1.55; white-space:pre-wrap }
+
+  /* Canvas */
+  canvas { border-radius:12px; background: linear-gradient(180deg,#08130a,#07200e); box-shadow:0 10px 24px rgba(0,0,0,0.25); display:block; }
+  [data-theme='dark'] canvas{box-shadow:0 10px 40px rgba(0,0,0,0.7)}
+
+  /* Buttons */
+  .btn {appearance:none;border:none;cursor:pointer;border-radius:999px;padding:10px 14px;font-weight:900}
+  .btn-primary {background:linear-gradient(180deg,var(--accent),#2e8f3d);color:#fff;box-shadow:0 10px 24px rgba(37,99,22,0.24)}
+  .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:8px 10px;border-radius:10px}
+  .btn-primary:active{transform:translateY(1px)}
+
+  /* Quiz */
+  .quiz-head{display:flex;align-items:center;gap:12px}
+  .progress{flex:1;height:10px;background:#e8f6e1;border-radius:999px;overflow:hidden;box-shadow: inset 0 0 0 1px rgba(0,0,0,.04)}
+  .progress > div{height:100%;width:0;background:linear-gradient(90deg,#58b947,#8ed36d);transition:width .4s ease}
+  .quiz-options { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+  .opt { padding:12px 14px; border-radius:12px; background:#e7f4d8; cursor:pointer; font-weight:800; border:2px solid transparent; transition: transform .12s ease, background .2s ease, border-color .2s ease }
+  .opt:hover{transform:translateY(-1px)}
+  .opt.correct { background:#43a047; color:white; border-color:#2e7d32; }
+  .opt.wrong { background:#e34b4b; color:white; border-color:#c62828; }
+
+  /* Badges */
+  .badges-list { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
+  .badge { width:76px; height:76px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; text-align:center; padding:10px; background:linear-gradient(180deg,#86c04a,#5aa02a); color:#fff; box-shadow:0 10px 24px rgba(0,0,0,0.12); font-weight:900 }
+
+  /* Leaderboard */
+  .leaderboard-list { margin-top:10px; display:flex; flex-direction:column; gap:8px }
+  .leader-item { display:flex; align-items:center; gap:10px; justify-content:space-between; padding:10px 12px; background:linear-gradient(180deg,#fff,#f0fff0); border-radius:12px; box-shadow: 0 8px 18px rgba(0,0,0,.05); animation: popIn .25s ease both }
+  @keyframes popIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .lead-left{display:flex;align-items:center;gap:10px}
+  .lead-name{font-weight:900}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(30,70,30,.96);color:#fff;padding:10px 14px;border-radius:12px;font-weight:800;box-shadow:0 10px 24px rgba(0,0,0,.18);z-index:9999;opacity:0}
+
+  /* Accessibility & motion preferences */
+  @media (prefers-reduced-motion: reduce) {*{animation:none!important;transition:none!important}}
+
+  /* Responsive */
+  @media(max-width:980px){.app{ padding:12px; gap:10px; }.sidebar{ display:flex; flex-direction:column; width:100%; padding:12px; border-radius:14px; position:static }.main{ width:100%; }.split{ flex-direction:column; }.right{ width:100%; max-width:100%; }}
+
+</style>
+</head>
+<body class="theme-water" data-theme="light">
+  <div class="app" role="application" aria-label="EcoLearn app">
+    <!-- Sidebar -->
+    <aside class="sidebar" aria-label="Navigation">
+      <div class="brand">EcoLearn</div>
+
+      <div class="userbox" id="userbox" title="Click to change avatar color">
+        <div id="sidebarAvatar" class="avatar" aria-hidden="true">US</div>
+        <div class="user-meta">
+          <div class="user-name" id="userLabel">Guest</div>
+          <div class="user-sub">Learner</div>
+        </div>
+      </div>
+        <!--  Streak Feature (Palak) -->
+    <div id="streakLabel" style="margin:10px 0; font-weight:600; color:#e65100;">
+       0 day streak
+    </div>
+      <div class="nav-list">
+        <button class="nav-btn active" data-target="dash">About</button>
+        <button class="nav-btn" data-target="learn">Learn</button>
+        <button class="nav-btn" data-target="quiz">Quiz</button>
+        <button class="nav-btn" data-target="badges">Badges</button>
+        <button class="nav-btn" data-target="leaderboard">Leaderboard</button>
+        <button class="nav-btn" data-target="reader">Reader</button>
+        <button class="nav-btn" data-target="StoryTime">Story Time</button>
+      </div>
+
+      <div style="flex:1"></div>
+      <div class="small">Click your avatar to cycle colors · Toggle theme in header</div>
+      <button class="nav-btn logout" id="logoutBtn">Logout</button>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Top card -->
+      <section class="card top-row" aria-hidden="false">
+        <div>
+          <div class="welcome">Welcome to EcoLearn</div>
+          <div style="color:rgba(0,0,0,0.55); margin-top:6px;">Learn concepts, play mini-games, and earn eco-points & badges.</div>
+        </div>
+        <div class="controls">
+          <div class="stats">
+            <div class="stat-bubble"><span class="stat-dot"></span> Eco Points: <span id="ecoPoints" class="count-animate">0</span></div>
+            <div class="stat-bubble"><span class="stat-dot"></span> Game Points: <span id="ecoPoints" class="count-animate">0</span></div>
+            <div class="stat-bubble"><span class="stat-dot"></span> Badges: <span id="badgeCount" class="count-animate">0</span></div>
+          </div>
+          <button id="themeToggle" class="btn btn-ghost" title="Toggle dark/light">Toggle Theme</button>
+          <button id="soundToggle" class="btn btn-ghost" title="Toggle sound">Sound: On</button>
+        </div>
+      </section>
+
+      <!-- Dashboard section -->
+      <section id="dash" class="card section active" aria-labelledby="dash">
+        <h3 style="margin-top:0">Dashboard</h3>
+        <p>This is an SIH project made by six people. Explore topics, play games, and compete on the leaderboard.</p>
+      </section>
+
+      <!-- Learn section -->
+      <section id="learn" class="card section" aria-labelledby="learn">
+        <h3 style="margin-top:0">Learn</h3>
+        <p>Select a topic to open the info + game split layout.</p>
+
+        <div class="domains-grid" role="list" aria-label="domains">
+          <div class="domain-card" role="listitem" data-sub="water">💧 Water Conservation</div>
+          <div class="domain-card" role="listitem" data-sub="agriculture">🌱 Sustainable Agriculture</div>
+          <div class="domain-card" role="listitem" data-sub="energy">🔋 Renewable Energy</div>
+          <div class="domain-card" role="listitem" data-sub="forest">🌳 Forest Diversity (info)</div>
+        </div>
+
+        <!-- Split area (info + game) -->
+        <div id="topicArea" style="margin-top:14px; display:none;">
+          <div class="split">
+            <div class="left">
+              <div class="topic-title" id="topicTitle">Topic</div>
+              <div class="topic-text" id="topicText">Topic description appears here.</div>
+              <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+                <button id="markLearned" class="btn btn-primary">Mark as Learned (+10 points)</button>
+              </div>
+            </div>
+            <div class="right">
+              <div style="font-weight:900; color:var(--dark);">Play & Practice</div>
+              <canvas id="gameCanvas" width="320" height="340" aria-label="Game canvas"></canvas>
+              <div style="font-size:13px; color:rgba(0,0,0,0.6);" id="gameHelp">Controls: ...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quiz -->
+      <section id="quiz" class="card section" aria-labelledby="quiz">
+        <div class="quiz-head">
+          <h3 style="margin:0">Quick Quiz</h3>
+          <div class="progress" aria-hidden="true"><div id="quizProgress"></div></div>
+        </div>
+        <div id="quizArea">
+          <p style="opacity:.8">Click the Quiz tab to start.</p>
+        </div>
+      </section>
+
+      <!-- Badges -->
+      <section id="badges" class="card section" aria-labelledby="badges">
+        <h3 style="margin-top:0">Your Badges</h3>
+        <div class="badges-list" id="badgesList"></div>
+      </section>
+
+      <!-- Leaderboard -->
+      <section id="leaderboard" class="card section" aria-labelledby="leaderboard">
+        <h3 style="margin-top:0">Leaderboard</h3>
+        <div class="leaderboard-list" id="leaderboardList"></div>
+      </section>
+
+     <!-- Reader -->
+<section id="reader" class="card section" aria-labelledby="reader">
+  <h3 style="margin-top:0">Reader</h3>
+  <div style="font-style:italic; color:#2e471e;">
+    <p>“The Earth is what we all have in common.” — Wendell Berry</p>
+    <ul>
+      <li>Rainwater harvesting, efficient irrigation & leak fixing.</li>
+      <li>Crop rotation, organic fertilizers & low tillage farming.</li>
+      <li>Solar panels, micro wind turbines and energy conservation.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Story Time -->
+<section id="StoryTime" class="card section" aria-labelledby="StoryTime">
+  <h3 style="margin-top:0">Story Time</h3>
+  <div style="font-style:italic; color:#2e471e;">
+    <p>Here your stories about environmental heroes, eco-missions, etc. will appear.</p>
+  </div>
+</section>
+
+
+    </main>
+  </div>
+
+  <!-- Toast container (created dynamically) -->
+
+<script>
+/* ----------------------
+   App state & persistence
+   ---------------------- */
+const DEFAULT_USER = { name: 'Guest' };
+let user = JSON.parse(localStorage.getItem('ecolearn_user')) || DEFAULT_USER;
+let ecoPoints = Number(localStorage.getItem('ecolearn_points')) || 0;
+let badges = JSON.parse(localStorage.getItem('ecolearn_badges') || '[]');
+let leaderboard = JSON.parse(localStorage.getItem('ecolearn_leaderboard') || '{}');
+let avatarHue = Number(localStorage.getItem('ecolearn_avatar_hue')) || Math.floor(Math.random()*360);
+let soundOn = JSON.parse(localStorage.getItem('ecolearn_sound_on'));
+if(soundOn === null) soundOn = true;
+let theme = localStorage.getItem('ecolearn_theme') || 'light';
+
+const navButtons = document.querySelectorAll('.sidebar .nav-btn:not(.logout)');
+const logoutBtn = document.getElementById('logoutBtn');
+const sections = document.querySelectorAll('.section');
+const userLabel = document.getElementById('userLabel');
+const pointsLabel = document.getElementById('ecoPoints');
+const badgeCount = document.getElementById('badgeCount');
+const sidebarAvatar = document.getElementById('sidebarAvatar');
+const themeToggle = document.getElementById('themeToggle');
+const soundToggle = document.getElementById('soundToggle');
+
+userLabel.textContent = user.name;
+pointsLabel.textContent = ecoPoints;
+badgeCount.textContent = badges.length;
+renderSidebarAvatar();
+updateThemeUI();
+updateSoundUI();
+
+function persist() {
+  localStorage.setItem('ecolearn_points', ecoPoints);
+  localStorage.setItem('ecolearn_badges', JSON.stringify(badges));
+  localStorage.setItem('ecolearn_leaderboard', JSON.stringify(leaderboard));
+  localStorage.setItem('ecolearn_user', JSON.stringify(user));
+  localStorage.setItem('ecolearn_avatar_hue', avatarHue);
+  localStorage.setItem('ecolearn_sound_on', soundOn);
+  localStorage.setItem('ecolearn_theme', theme);
+}
+
+/* ----------------------
+   Audio: small chimes via WebAudio (no external files)
+   ---------------------- */
+const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function ensureAudio(){ if(!audioCtx) audioCtx = new AudioContextCtor(); }
+function playTone(type='chime'){ if(!soundOn) return; try{ ensureAudio(); const now = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); g.gain.setValueAtTime(0, now); if(type==='chime'){ o.frequency.setValueAtTime(880, now); o.type='sine'; g.gain.linearRampToValueAtTime(0.08, now+0.01); g.gain.exponentialRampToValueAtTime(0.0001, now+0.42); o.start(now); o.stop(now+0.45);} else if(type==='correct'){ o.frequency.setValueAtTime(1100, now); o.type='triangle'; g.gain.linearRampToValueAtTime(0.1, now+0.005); g.gain.exponentialRampToValueAtTime(0.0001, now+0.22); o.start(now); o.stop(now+0.24);} else if(type==='wrong'){ o.frequency.setValueAtTime(220, now); o.type='sawtooth'; g.gain.linearRampToValueAtTime(0.08, now+0.005); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.start(now); o.stop(now+0.2);} }catch(e){console.warn('Audio failed',e);} }
+
+/* ----------------------
+   Helper: initials avatar (no cartoons)
+   ---------------------- */
+function initialsFromName(name){ if(!name) return 'US'; const parts = name.trim().split(/\s+/).slice(0,2); return parts.map(p=>p[0]?.toUpperCase()||'').join(''); }
+function avatarStyle(h){ return `background: conic-gradient(from 220deg, hsl(${h} 70% 80%), hsl(${(h+40)%360} 70% 75%), hsl(${(h+80)%360} 80% 78%)); color: #08220f;`; }
+function renderSidebarAvatar(){ sidebarAvatar.textContent = initialsFromName(user.name); sidebarAvatar.setAttribute('style', avatarStyle(avatarHue)); }
+
+/* click avatar to cycle colors */
+const userbox = document.getElementById('userbox');
+userbox.addEventListener('click', ()=>{ avatarHue = (avatarHue + 42) % 360; renderSidebarAvatar(); persist(); playTone('chime'); });
+
+/* ----------------------
+   Sidebar nav handling with animated sections
+   ---------------------- */
+navButtons.forEach(btn=>{ btn.addEventListener('click', ()=> { navButtons.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); const t = btn.dataset.target; showSection(t); if(t === 'quiz') initQuiz(); if(t === 'badges') renderBadges(); if(t === 'leaderboard') renderLeaderboard(); playTone('chime'); }); });
+logoutBtn.addEventListener('click', ()=>{ if(confirm('Logout? This will clear local progress.')) { localStorage.removeItem('ecolearn_user'); localStorage.removeItem('ecolearn_points'); localStorage.removeItem('ecolearn_badges'); localStorage.removeItem('ecolearn_leaderboard'); localStorage.removeItem('ecolearn_avatar_hue'); localStorage.removeItem('ecolearn_sound_on'); localStorage.removeItem('ecolearn_theme'); location.reload(); } });
+
+function showSection(id){ sections.forEach(s=>s.classList.remove('active')); const sec = document.getElementById(id); if(sec){ sec.classList.add('active'); sec.scrollIntoView({behavior:'smooth', block:'start'}); } }
+
+/* ----------------------
+   Learn topics content + themed backgrounds
+   ---------------------- */
+const topics = {
+  water: { title: 'Water Conservation', text: `Use water efficiently to reduce waste and protect resources.\n\nWhy it's important:\n• Ensures water availability\n• Protects ecosystems\n• Saves energy and money` },
+  agriculture: { title: 'Sustainable Agriculture', text: `Practices that protect soil health and biodiversity.\n\nWhy it's important:\n• Long-term food security\n• Reduces chemical pollution` },
+  energy: { title: 'Renewable Energy', text: `Solar, wind and hydro sources reduce carbon emissions.\n\nWhy it's important:\n• Reduces pollution\n• Sustainable power supply` },
+  forest: { title: 'Forest Diversity', text: `Forests provide habitat, clean air & climate regulation.\nProtecting forest diversity preserves ecosystems and species.` }
+};
+
+const domainCards = document.querySelectorAll('.domain-card');
+const topicArea = document.getElementById('topicArea');
+const topicTitle = document.getElementById('topicTitle');
+const topicText = document.getElementById('topicText');
+const markLearnedBtn = document.getElementById('markLearned');
+const gameHelp = document.getElementById('gameHelp');
+
+domainCards.forEach(card=>{ card.addEventListener('click', ()=> openTopic(card.dataset.sub)); });
+
+function setThemeForTopic(sub){ document.body.classList.remove('theme-water','theme-agriculture','theme-energy'); if(sub==='water') document.body.classList.add('theme-water'); if(sub==='agriculture') document.body.classList.add('theme-agriculture'); if(sub==='energy') document.body.classList.add('theme-energy'); }
+
+function openTopic(sub){ if(!topics[sub]) return; topicArea.style.display = 'block'; topicTitle.textContent = topics[sub].title; topicText.textContent = topics[sub].text; currentTopic = sub; stopGameIfAny(); initGameForTopic(sub); setThemeForTopic(sub); topicArea.scrollIntoView({behavior:'smooth', block:'start'}); playTone('chime'); }
+
+/* ----------------------
+   Points & badges helpers + animated counters
+   ---------------------- */
+function animateCount(el, from, to, duration=420){ const start = performance.now(); function frame(t){ const p = Math.min(1, (t-start)/duration); const eased = 1 - Math.pow(1-p, 3); const val = Math.round(from + (to-from)*eased); el.textContent = val; if(p<1) requestAnimationFrame(frame); } requestAnimationFrame(frame); }
+function earnPoints(n){ const prev = ecoPoints; ecoPoints += n; animateCount(pointsLabel, prev, ecoPoints); if(!leaderboard[user.name]) leaderboard[user.name] = 0; leaderboard[user.name] = ecoPoints; persist(); renderLeaderboard(); updateBadgeStatus(); playTone('correct'); }
+function addBadgeOnce(name){ if(!badges.includes(name)){ badges.push(name); animateCount(badgeCount, badges.length-1, badges.length, 380); persist(); playTone('chime'); } }
+function updateBadgeStatus(){ if(ecoPoints >= 5) addBadgeOnce('Water Saver'); if(ecoPoints >= 15) addBadgeOnce('Green Farmer'); if(ecoPoints >= 30) addBadgeOnce('Eco Quizzer'); if(ecoPoints >= 40) addBadgeOnce('Energy Hero'); if(ecoPoints >= 50) addBadgeOnce('Forest Guardian'); }
+
+markLearnedBtn.addEventListener('click', ()=>{ earnPoints(10); addBadgeOnce('Eco Learner'); showToast('Marked as learned! +10 points'); });
+
+/* ----------------------
+   Minimal toast
+   ---------------------- */
+function showToast(msg){ const t = document.createElement('div'); t.className='toast'; t.textContent = msg; document.body.appendChild(t); requestAnimationFrame(()=>{ t.style.transition='opacity .25s ease, transform .25s ease'; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(-4px)'; }); setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(0)'; t.addEventListener('transitionend',()=>t.remove(),{once:true}) }, 1400); }
+
+/* ----------------------
+   Games: manage lifecycle (same games, with subtle effects)
+   ---------------------- */
+let gameCanvas = document.getElementById('gameCanvas');
+let gameCtx = null; let gameLoopId = null; let currentTopic = null;
+function stopGameIfAny(){ if(gameLoopId) { cancelAnimationFrame(gameLoopId); gameLoopId = null; } window.removeEventListener('keydown', globalKeyHandler); if(window._snakeTimer) { clearTimeout(window._snakeTimer); window._snakeTimer = null; } }
+
+function initGameForTopic(topic){ gameCanvas = document.getElementById('gameCanvas'); gameCtx = gameCanvas.getContext('2d'); gameCtx.clearRect(0,0,gameCanvas.width,gameCanvas.height); if(topic === 'water'){ gameHelp.textContent = 'Controls: Left / Right arrows to move bucket. Catch drops (+2 pts)'; initWaterGame(); } else if(topic === 'agriculture'){ gameHelp.textContent = 'Controls: Arrow keys to move snake. Eat crops (+5 pts)'; initSnakeGame(); } else if(topic === 'energy'){ gameHelp.textContent = 'Controls: Left/Right to move rocket, Space to shoot. Pop balloons (+3 pts)'; initRocketGame(); } else { gameHelp.textContent = 'This topic currently shows information only.'; const ctx = gameCtx; const c = gameCanvas; ctx.fillStyle = '#0a290f'; ctx.fillRect(0,0,c.width,c.height); ctx.fillStyle = '#9edb8a'; ctx.font = '16px system-ui'; ctx.fillText('No game for this topic', 20, 40); } }
+
+/* WATER GAME (bucket) */
+function initWaterGame() {
+  stopGameIfAny();
+  const ctx = gameCtx;
+  const canvas = gameCanvas;
+  const bucket = { x: (canvas.width / 2) - 40, y: canvas.height - 48, w: 80, h: 34 };
+  let drops = [];
+  let gamePoints = 0;
+  let bgWaves = Array.from({ length: 6 }, (_, i) => ({ y: i * (canvas.height / 6), amp: 6 + Math.random() * 8, speed: 0.2 + Math.random() * 0.3, phase: Math.random() * Math.PI * 2 }));
+
+  function spawnDrop() {
+    const x = 10 + Math.random() * (canvas.width - 20);
+    drops.push({ x, y: -8, r: 8, vy: 2 + Math.random() * 1.4 });
+  }
+
+  function drawBucket() {
+    ctx.fillStyle = '#5f463b';
+    ctx.fillRect(bucket.x - 8, bucket.y - 6, bucket.w + 16, 10);
+    ctx.fillStyle = '#8d6e63';
+    ctx.fillRect(bucket.x, bucket.y, bucket.w, bucket.h - 6);
+    ctx.strokeStyle = '#4a3a32';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(bucket.x + bucket.w / 2, bucket.y - 2, bucket.w / 2 + 6, Math.PI, 0);
+    ctx.stroke();
+  }
+
+  function drawBG(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#02120b';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = '#8fe28b';
+    bgWaves.forEach(w => {
+      ctx.beginPath();
+      for (let x = 0; x < canvas.width; x += 6) {
+        const y = w.y + Math.sin((x / 60) + (t / 1000) * w.speed + w.phase) * w.amp;
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function drawGamePoints() {
+    ctx.font = '18px system-ui';
+    ctx.fillStyle = '#ffd54f';
+    ctx.fillText(`GP: ${gamePoints}`, 14, 24);
+  }
+
+  function loop(t) {
+    drawBG(t);
+    if (Math.random() < 0.045) spawnDrop();
+
+    for (let i = drops.length - 1; i >= 0; i--) {
+      const d = drops[i];
+      const grd = ctx.createLinearGradient(d.x, d.y - d.r, d.x, d.y + d.r);
+      grd.addColorStop(0, '#9fe6ff');
+      grd.addColorStop(1, '#00bfff');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.beginPath();
+      ctx.moveTo(d.x - 3, d.y + 2);
+      ctx.lineTo(d.x, d.y + 8);
+      ctx.stroke();
+
+      d.y += d.vy;
+      const withinX = d.x >= bucket.x && d.x <= bucket.x + bucket.w;
+      const hit = (d.y + d.r) >= bucket.y && withinX;
+      if (hit) {
+        drops.splice(i, 1);
+        earnPoints(2);
+        gamePoints += 2;
+      } else if (d.y - d.r > canvas.height) drops.splice(i, 1);
+    }
+
+    drawBucket();
+    drawGamePoints();
+    gameLoopId = requestAnimationFrame(loop);
+  }
+
+  function onKey(e) {
+    if (e.key === 'ArrowLeft') bucket.x = Math.max(6, bucket.x - 18);
+    if (e.key === 'ArrowRight') bucket.x = Math.min(canvas.width - bucket.w - 6, bucket.x + 18);
+  }
+
+  window.addEventListener('keydown', onKey);
+  requestAnimationFrame(loop);
+}
+
+
+/* SNAKE GAME (agriculture) */
+function initSnakeGame() {
+  stopGameIfAny();
+  const canvas = gameCanvas;
+  const ctx = gameCtx;
+  const CELL = 20;
+  const COLS = Math.floor(canvas.width / CELL);
+  const ROWS = Math.floor(canvas.height / CELL);
+  let snake = [{ x: Math.floor(COLS / 2), y: Math.floor(ROWS / 2) }];
+  let dir = { x: 1, y: 0 };
+  let nextDir = { x: 1, y: 0 };
+  let food = spawnFood();
+  let gamePoints = 0;
+  window._snakeTimer = null;
+
+  function spawnFood() {
+    let fx, fy;
+    do {
+      fx = Math.floor(Math.random() * COLS);
+      fy = Math.floor(Math.random() * ROWS);
+    } while (snake.some(s => s.x === fx && s.y === fy));
+    return { x: fx, y: fy };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 0.06;
+    ctx.strokeStyle = '#ffffff';
+    for (let c = 0; c < COLS; c++) { ctx.beginPath(); ctx.moveTo(c * CELL, 0); ctx.lineTo(c * CELL, ROWS * CELL); ctx.stroke(); }
+    for (let r = 0; r < ROWS; r++) { ctx.beginPath(); ctx.moveTo(0, r * CELL); ctx.lineTo(COLS * CELL, r * CELL); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+
+    snake.forEach((s, i) => { ctx.fillStyle = (i === 0) ? '#2e7d32' : '#66bb6a'; ctx.fillRect(s.x * CELL + 2, s.y * CELL + 2, CELL - 4, CELL - 4); });
+
+    ctx.font = (CELL - 2) + 'px system-ui, emoji';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🌽', food.x * CELL + CELL / 2, food.y * CELL + CELL / 2 + 1);
+
+    // Draw GP
+    ctx.font = '15px system-ui';
+    ctx.fillStyle = '#ffd54f';
+    ctx.fillText(`GP: ${gamePoints}`, 20, 24);
+  }
+
+  function step() {
+    dir = nextDir;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+    if (head.x < 0 || head.y < 0 || head.x >= COLS || head.y >= ROWS || snake.some((s, idx) => idx > 0 && s.x === head.x && s.y === head.y)) {
+      showToast('Game Over — Snake crashed');
+      playTone('wrong');
+      stopGameIfAny();
+      return;
+    }
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      earnPoints(5);
+      gamePoints += 5;
+      food = spawnFood();
+    } else snake.pop();
+    draw();
+    window._snakeTimer = setTimeout(step, Math.max(80, 170 - (snake.length - 3) * 4));
+  }
+
+  function onKey(e) {
+    if (e.key === 'ArrowUp' && dir.y !== 1) nextDir = { x: 0, y: -1 };
+    if (e.key === 'ArrowDown' && dir.y !== -1) nextDir = { x: 0, y: 1 };
+    if (e.key === 'ArrowLeft' && dir.x !== 1) nextDir = { x: -1, y: 0 };
+    if (e.key === 'ArrowRight' && dir.x !== -1) nextDir = { x: 1, y: 0 };
+  }
+
+  window.addEventListener('keydown', onKey);
+  step();
+}
+
+
+/* ROCKET GAME (energy) */
+function initRocketGame() {
+  stopGameIfAny();
+  const canvas = gameCanvas;
+  const ctx = gameCtx;
+  const rocket = { x: canvas.width / 2 - 18, y: canvas.height - 64, w: 36, h: 44 };
+  let bullets = [];
+  let balloons = [];
+  let gamePoints = 0;
+
+  function spawnBalloon() {
+    const r = 10 + Math.random() * 14;
+    balloons.push({ x: r + Math.random() * (canvas.width - 2 * r), y: -r * 2, r, vy: 0.7 + Math.random() * 0.9 });
+  }
+
+  function drawRocket() {
+    ctx.fillStyle = '#e53935';
+    ctx.fillRect(rocket.x + 8, rocket.y + 12, rocket.w - 16, rocket.h - 16);
+    ctx.fillStyle = '#c62828';
+    ctx.fillRect(rocket.x, rocket.y + 24, 10, 14);
+    ctx.fillRect(rocket.x + rocket.w - 10, rocket.y + 24, 10, 14);
+    ctx.fillStyle = '#ef5350';
+    ctx.beginPath();
+    ctx.moveTo(rocket.x + rocket.w / 2, rocket.y);
+    ctx.lineTo(rocket.x, rocket.y + 12);
+    ctx.lineTo(rocket.x + rocket.w, rocket.y + 12);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawGamePoints() {
+    ctx.font = '18px system-ui';
+    ctx.fillStyle = '#ffd54f';
+    ctx.fillText(`GP: ${gamePoints}`, 14, 24);
+  }
+
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (Math.random() < 0.028) spawnBalloon();
+
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      ctx.fillStyle = '#ffd54f';
+      ctx.fillRect(b.x - 2, b.y, 4, 10);
+      b.y += b.vy;
+      if (b.y < -12) bullets.splice(i, 1);
+    }
+
+    for (let i = balloons.length - 1; i >= 0; i--) {
+      const bl = balloons[i];
+      bl.y += bl.vy;
+      ctx.beginPath();
+      ctx.ellipse(bl.x, bl.y, bl.r * 0.85, bl.r, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff8a65';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.beginPath();
+      ctx.moveTo(bl.x, bl.y + bl.r);
+      ctx.lineTo(bl.x, bl.y + bl.r + 10);
+      ctx.stroke();
+
+      if (bl.y - bl.r > canvas.height + 30) balloons.splice(i, 1);
+      else {
+        for (let j = bullets.length - 1; j >= 0; j--) {
+          const bu = bullets[j];
+          const dx = bu.x - bl.x;
+          const dy = bu.y - bl.y;
+          if (Math.sqrt(dx * dx + dy * dy) < bl.r + 6) {
+            balloons.splice(i, 1);
+            bullets.splice(j, 1);
+            earnPoints(3);
+            gamePoints += 3;
+            playTone('correct');
+            break;
+          }
+        }
+      }
+    }
+
+    drawRocket();
+    drawGamePoints();
+    gameLoopId = requestAnimationFrame(loop);
+  }
+
+  function fire() { bullets.push({ x: rocket.x + rocket.w / 2, y: rocket.y - 8, vy: -6 }); }
+
+  function onKey(e) {
+    if (e.key === 'ArrowLeft') rocket.x = Math.max(6, rocket.x - 14);
+    if (e.key === 'ArrowRight') rocket.x = Math.min(canvas.width - rocket.w - 6, rocket.x + 14);
+    if (e.code === 'Space' || e.key === ' ') { fire(); playTone('chime'); }
+  }
+
+  window.addEventListener('keydown', onKey);
+  loop();
+}
+
+/* ----------------------
+   Quiz implementation with progress
+   ---------------------- */
+const quizQuestions = [ { q: "Which is a renewable energy source?", opts: ["Coal","Wind","Oil","Gas"], ans: 1 }, { q: "What helps conserve water?", opts: ["Leaving taps running","Rainwater harvesting","Bathing long","Washing car daily"], ans: 1 }, { q: "Sustainable agriculture aims to:", opts: ["Harm soil","Use more chemicals","Protect environment","Overuse water"], ans: 2 }, { q: "Forest diversity supports:", opts: ["Less wildlife","More pollution","Wildlife habitats","Less rainfall"], ans: 2 }, { q: "Which home action saves energy?", opts: ["Leaving lights on","Using LED bulbs","Keeping fridge open","Overheating water"], ans: 1 } ];
+let quizIndex = 0; const progressEl = document.getElementById('quizProgress');
+function initQuiz(){ quizIndex = 0; renderQuiz(); updateProgress(); }
+function updateProgress(){ const pct = (quizIndex/quizQuestions.length)*100; progressEl.style.width = pct + '%'; }
+function renderQuiz(){ const area = document.getElementById('quizArea'); area.innerHTML = ''; if(quizIndex >= quizQuestions.length){ area.innerHTML = `<h4>Quiz completed!</h4><p>Your eco-points: ${ecoPoints}</p>`; updateBadgeStatus(); updateProgress(); return; } const q = quizQuestions[quizIndex]; const qEl = document.createElement('div'); qEl.className = 'topic-title'; qEl.textContent = q.q; const opts = document.createElement('div'); opts.className = 'quiz-options'; q.opts.forEach((o,i)=>{ const b = document.createElement('div'); b.className='opt'; b.textContent = o; b.addEventListener('click', ()=>{ if(b.classList.contains('correct')||b.classList.contains('wrong')) return; if(i===q.ans){ b.classList.add('correct'); earnPoints(10); showToast('Correct! +10 pts'); playTone('correct'); } else { b.classList.add('wrong'); showToast('Wrong'); playTone('wrong'); } setTimeout(()=>{ quizIndex++; updateProgress(); renderQuiz(); },700); }); opts.appendChild(b); }); area.appendChild(qEl); area.appendChild(opts); }
+
+/* ----------------------
+   Badges & Leaderboard with avatars
+   ---------------------- */
+function renderBadges(){ const container = document.getElementById('badgesList'); container.innerHTML=''; if(badges.length===0){ container.innerHTML='<div style="opacity:.8">No badges yet — play and earn them!</div>'; return; } badges.forEach(b=>{ const el=document.createElement('div'); el.className='badge'; el.title=b; el.textContent=b; container.appendChild(el); }); }
+function renderLeaderboard(){ const el = document.getElementById('leaderboardList'); el.innerHTML=''; if(!leaderboard[user.name]) leaderboard[user.name]=ecoPoints; const sorted = Object.entries(leaderboard).sort((a,b)=>b[1]-a[1]); sorted.forEach(([name,pts], idx)=>{ const row=document.createElement('div'); row.className='leader-item'; const left=document.createElement('div'); left.className='lead-left'; const av=document.createElement('div'); av.className='avatar small'; av.textContent=initialsFromName(name); av.setAttribute('style', avatarStyle((avatarHue + (idx*32))%360)); const nm=document.createElement('div'); nm.className='lead-name'; nm.textContent=`${idx+1}. ${name}`; left.appendChild(av); left.appendChild(nm); const right=document.createElement('div'); right.textContent=`${pts} pts`; row.appendChild(left); row.appendChild(right); el.appendChild(row); }); }
+
+/* ----------------------
+   Theme & sound toggles
+   ---------------------- */
+themeToggle.addEventListener('click', ()=>{ theme = (theme==='light')? 'dark':'light'; updateThemeUI(); persist(); playTone('chime'); });
+function updateThemeUI(){ document.body.setAttribute('data-theme', theme); themeToggle.textContent = (theme==='light')? 'Dark' : 'Light'; }
+soundToggle.addEventListener('click', ()=>{ soundOn = !soundOn; updateSoundUI(); persist(); });
+function updateSoundUI(){ soundToggle.textContent = `Sound: ${soundOn?'On':'Off'}`; }
+
+/* ----------------------
+   Initialization
+   ---------------------- */
+(function initApp(){ if(!user || !user.name || user.name === 'Guest'){ const nn = prompt('Welcome to EcoLearn! Enter your name (or leave blank for Guest):'); if(nn && nn.trim().length){ user = { name: nn.trim() }; localStorage.setItem('ecolearn_user', JSON.stringify(user)); } } userLabel.textContent = user.name || 'Guest'; pointsLabel.textContent = ecoPoints; badgeCount.textContent = badges.length; renderLeaderboard(); showSection('dash'); renderSidebarAvatar(); // restore theme class
+  document.body.classList.remove('theme-water','theme-agriculture','theme-energy'); if(localStorage.getItem('ecolearn_last_topic')){ const t=localStorage.getItem('ecolearn_last_topic'); setThemeForTopic(t); } if(localStorage.getItem('ecolearn_theme')){ theme = localStorage.getItem('ecolearn_theme'); updateThemeUI(); } if(localStorage.getItem('ecolearn_sound_on')!==null){ soundOn = JSON.parse(localStorage.getItem('ecolearn_sound_on')); updateSoundUI(); }
+})();
+
+/* Fallback handler (kept minimal) */
+function globalKeyHandler(e){}
+/* ----------------------
+   Draw Game Points on canvas
+   ---------------------- */
+function drawGamePoints(){
+    if(!gameCtx || !gameCanvas) return;
+    const ctx = gameCtx;
+    ctx.save();
+    ctx.font = '20px system-ui';
+    ctx.fillStyle = '#ffeb3b';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText(`GP: ${ecoPoints}`, 12, 12);
+    ctx.restore();
+}
+
+// Wrap existing game loops to include drawGamePoints
+// WATER GAME
+const originalWaterLoop = initWaterGame;
+function waterLoopWrapper(t){
+    drawGamePoints();
+}
+
+// SNAKE GAME
+const originalSnakeStep = initSnakeGame;
+function snakeStepWrapper(){
+    drawGamePoints();
+}
+
+// ROCKET GAME
+const originalRocketLoop = initRocketGame;
+function rocketLoopWrapper(){
+    drawGamePoints();
+}
+
+// Integration: inside each game loop, just call drawGamePoints()
+// For example, in initWaterGame -> inside loop(t) after drawBucket(): drawGamePoints();
+// Similarly, in initSnakeGame -> inside step(): drawGamePoints();
+// And in initRocketGame -> inside loop(): drawGamePoints();
 
 /* ----------------------
    Streak Feature (Palak)
@@ -32,3 +773,9 @@ function updateStreak() {
 }
 
 updateStreak();
+
+
+
+</script>
+</body>
+</html>
