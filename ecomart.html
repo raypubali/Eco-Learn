@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Eco-Mart</title>
+  <style>
+    body {
+      background: linear-gradient(180deg,#eaf8d9 0%, #bfe57a 100%);
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #pointsCounter {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+  }
+
+    h1 {
+      margin-bottom: 30px;
+      color: #2e7d32;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .card img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin-bottom: 15px;
+    }
+
+    .card h3 {
+      margin: 10px 0;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .card p {
+      font-weight: bold;
+      color: #444;
+      margin: 10px 0;
+    }
+
+    .card button {
+      padding: 10px 15px;
+      background: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s ease;
+    }
+
+    .card button:hover {
+      background: #1b5e20;
+    }
+
+    .card button.disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌿 Eco-Mart 🌿</h1>
+  <p>Use your points to redeem eco-friendly products.</p>
+  <p><em>A sustainable future awaits!</em></p>
+
+  <div class="product-grid">
+    <div class="card">
+      <img src="prize1.jpg" alt="Bamboo Toothbrush">
+      <h3>Bamboo Toothbrush</h3>
+      <p>50 Points</p>
+      <button>Redeem</button>
+    </div>
+    <div class="card">
+      <img src="prize2.webp" alt="Reusable Shopping Bag">
+      <h3>Reusable Shopping Bag</h3>
+      <p>100 Points</p>
+      <button>Redeem</button>
+    </div>
+    <div class="card">
+      <img src="prize3.webp" alt="Eco-friendly Notebook">
+      <h3>Eco-friendly Notebook</h3>
+      <p>150 Points</p>
+      <button>Redeem</button>
+    </div>
+    <div class="card">
+      <img src="prize4.webp" alt="Stainless Steel Straw Set">
+      <h3>Stainless Steel Straw Set</h3>
+      <p>200 Points</p>
+      <button>Redeem</button>
+    </div>
+    <div class="card">
+      <img src="prize5.webp" alt="Plantable Seed Pencils">
+      <h3>Plantable Seed Pencils</h3>
+      <p>250 Points</p>
+      <button>Redeem</button>
+    </div>
+    <div class="card">
+      <img src="prize6.jpg" alt="Compost Bin (Mini)">
+      <h3>Compost Bin (Mini)</h3>
+      <p>300 Points</p>
+      <button>Redeem</button>
+    </div>
+    <div class="card">
+      <img src="prize7.webp" alt="Organic Cotton T-shirt">
+      <h3>Organic Cotton T-shirt</h3>
+      <p>400 Points</p>
+      <button>Redeem</button>
+    </div>
+    <div class="card">
+      <img src="prize8.webp" alt="Solar Power Bank">
+      <h3>Solar Power Bank</h3>
+      <p>500 Points</p>
+      <button>Redeem</button>
+    </div>
+  </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+  let userPoints = 500;
+
+  const counter = document.createElement('div');
+  counter.id = "pointsCounter";
+  counter.textContent = `You have ${userPoints} points left`;
+  document.body.appendChild(counter);
+
+  updateButtons();
+
+  function updateButtons() {
+    document.querySelectorAll('.card').forEach(card => {
+      const btn = card.querySelector('button, a');
+      if (!btn) return;
+
+      let cost = Number.parseInt(card.getAttribute('data-points'), 10);
+
+      if (Number.isNaN(cost)) {
+        const ptsEl = [...card.querySelectorAll('p')].find(p => /points?/i.test(p.textContent));
+        const m = ptsEl ? ptsEl.textContent.replace(/,/g, '').match(/\d+/) : null;
+        cost = m ? Number.parseInt(m[0], 10) : NaN;
+      }
+
+      if (Number.isNaN(cost)) {
+        makeDisabled(btn);
+        return;
+      }
+
+      if (userPoints >= cost) {
+        makeEnabled(btn, card, cost);
+      } else {
+        makeDisabled(btn);
+      }
+    });
+  }
+
+  function makeDisabled(btn) {
+    btn.textContent = 'Not enough points';
+    btn.classList.add('disabled');
+    btn.setAttribute('aria-disabled', 'true');
+    if ('disabled' in btn) btn.disabled = true;
+    btn.onclick = e => e.preventDefault();
+  }
+
+  function makeEnabled(btn, card, cost) {
+    btn.textContent = 'Redeem';
+    btn.classList.remove('disabled');
+    btn.removeAttribute('aria-disabled');
+    if ('disabled' in btn) btn.disabled = false;
+
+  btn.onclick = () => {
+    const name = card.querySelector('h3')?.textContent || 'item';
+    const img = card.querySelector('img')?.src || '';
+    const desc = card.querySelector('p')?.textContent || '';
+    // Navigation to redeem.html with product info
+    window.location.href = `redeem.html?name=${encodeURIComponent(name)}&desc=${encodeURIComponent(desc)}&img=${encodeURIComponent(img)}`;
+  };
+}
+});
+</script>
+</body>
+</html>
