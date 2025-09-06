@@ -475,40 +475,38 @@ function drawStats() {
     if (Math.random() < 0.045) spawnDrop();
 
     for (let i = drops.length - 1; i >= 0; i--) {
-      const d = drops[i];
-      const grd = ctx.createLinearGradient(d.x, d.y - d.r, d.x, d.y + d.r);
-      grd.addColorStop(0, '#9fe6ff');
-      grd.addColorStop(1, '#00bfff');
-      ctx.fillStyle = grd;
-      ctx.beginPath();
-      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-      ctx.beginPath();
-      ctx.moveTo(d.x - 3, d.y + 2);
-      ctx.lineTo(d.x, d.y + 8);
-      ctx.stroke();
+  const d = drops[i];
+  const grd = ctx.createLinearGradient(d.x, d.y - d.r, d.x, d.y + d.r);
+  grd.addColorStop(0, '#9fe6ff');
+  grd.addColorStop(1, '#00bfff');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  ctx.beginPath();
+  ctx.moveTo(d.x - 3, d.y + 2);
+  ctx.lineTo(d.x, d.y + 8);
+  ctx.stroke();
 
-      d.y += d.vy;
-      const withinX = d.x >= bucket.x && d.x <= bucket.x + bucket.w;
-      const hit = (d.y + d.r) >= bucket.y && withinX;
-      if (hit) {
-        drops.splice(i, 1);
-        earnPoints(2);
-        gamePoints += 2;
-      } else if (d.y - d.r > canvas.height) {
-          drops.splice(i, 1);
-          learningPoints -= 1;   // lose HP if drop missed
-          localStorage.setItem('ecolearn_hp', learningPoints);
-         if (learningPoints < gamePoints) {
-            alert("Game Over! HP is less than GP.");
-            cancelAnimationFrame(gameLoopId);
-            window.removeEventListener('keydown', onKey);
-            return;
+  d.y += d.vy;
+  const withinX = d.x >= bucket.x && d.x <= bucket.x + bucket.w;
+  const hit = (d.y + d.r) >= bucket.y && withinX;
+
+  if (hit) {
+    drops.splice(i, 1);
+    earnPoints(2);
+    gamePoints += 2;
+  } else if (d.y + d.r >= canvas.height) {  // **if drop touches ground**
+    drops.splice(i, 1);
+    alert("Game Over! A drop touched the ground.");
+    cancelAnimationFrame(gameLoopId);
+    window.removeEventListener('keydown', onKey);
+    return;
   }
 }
 
-    }
+    
 
     drawBucket();
     drawStats();
@@ -711,7 +709,7 @@ function renderQuiz(){ const area = document.getElementById('quizArea'); area.in
    ---------------------- */
 function renderBadges(){ const container = document.getElementById('badgesList'); container.innerHTML=''; if(badges.length===0){ container.innerHTML='<div style="opacity:.8">No badges yet — play and earn them!</div>'; return; } badges.forEach(b=>{ const el=document.createElement('div'); el.className='badge'; el.title=b; el.textContent=b; container.appendChild(el); }); }
 function renderLeaderboard(){ const el = document.getElementById('leaderboardList'); el.innerHTML=''; if(!leaderboard[user.name]) leaderboard[user.name]=ecoPoints; const sorted = Object.entries(leaderboard).sort((a,b)=>b[1]-a[1]); sorted.forEach(([name,pts], idx)=>{ const row=document.createElement('div'); row.className='leader-item'; const left=document.createElement('div'); left.className='lead-left'; const av=document.createElement('div'); av.className='avatar small'; av.textContent=initialsFromName(name); av.setAttribute('style', avatarStyle((avatarHue + (idx*32))%360)); const nm=document.createElement('div'); nm.className='lead-name'; nm.textContent=`${idx+1}. ${name}`; left.appendChild(av); left.appendChild(nm); const right=document.createElement('div'); right.textContent=`${pts} pts`; row.appendChild(left); row.appendChild(right); el.appendChild(row); }); }
-function earnPoints(n){ const prev = ecoPoints; ecoPoints += n; animateCount(pointsLabel, prev, ecoPoints); if(!leaderboard[user.name]) leaderboard[user.name] = 0; leaderboard[user.name] = ecoPoints; persist(); renderLeaderboard(); updateBadgeStatus(); playTone('correct'); }
+
 /* ----------------------
    Theme & sound toggles
    ---------------------- */
