@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Redeem Product</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+
+    .left, .right {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .left { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      background: linear-gradient(180deg,#eaf8d9 0%, #bfe57a 100%); 
+    }
+
+    .right { 
+      background: linear-gradient(180deg,#bfe57a,#eaf8d9 100%);
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      overflow-y: auto; 
+    }
+
+    .coupon-container1 { 
+      background: linear-gradient(180deg,#bfe57a,#eaf8d9 100%);
+      width: 100%; 
+      max-width: 75%; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px;
+      padding: 25px; 
+      border-radius: 15px; 
+      box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+    }
+
+    .coupon-container2 { 
+      background: linear-gradient(180deg,#eaf8d9 0%, #bfe57a 100%); 
+      width: 100%; 
+      max-width: 75%; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px;
+      padding: 25px; 
+      border-radius: 15px; 
+      box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+    }
+
+    .coupon-box {
+      background: #f1f8e9;
+      border-left: 5px solid #4CAF50;
+      border-bottom: 5px solid #4CAF50;
+      padding: 15px 20px;
+      border-radius: 10px;
+      position: relative;
+    }
+
+    .coupon-box h3 {
+      margin: 0;
+      color: #2e7d32;
+    }
+
+    .coupon-box p {
+      margin: 5px 0;
+      color: #555;
+    }
+
+    .coupon-box code {
+      background: #dff0d8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .copy-btn:hover {
+      background: #388e3c;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .left, .right {
+        width: 100%;
+        height: auto;
+        padding: 20px;
+      }
+
+      .product-box {
+        width: 90%;
+        height: auto;
+      }
+
+      #productDesc {
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+    <div class="left">
+      <div class="coupon-container1">
+        <div class="coupon-box">
+          <h3>Amazon</h3>
+          <p><strong>Code:</strong> <code id="code1">AMZ10OFF</code></p>
+          <p>Get 10% off on orders above ₹999</p>
+          <button class="copy-btn" onclick="copyCode('code1')">Copy</button>
+        </div>
+
+        <div class="coupon-box">
+          <h3>Flipkart</h3>
+          <p><strong>Code:</strong> <code id="code2">FLIP20</code></p>
+          <p>Flat ₹200 off on electronics</p>
+          <button class="copy-btn" onclick="copyCode('code2')">Copy</button>
+        </div>
+
+        <div class="coupon-box">
+          <h3>Myntra</h3>
+          <p><strong>Code:</strong> <code id="code3">MYNTRA30</code></p>
+          <p>30% off on fashion items</p>
+          <button class="copy-btn" onclick="copyCode('code3')">Copy</button>
+        </div>
+
+        <div class="coupon-box">
+          <h3>Ajio</h3>
+          <p><strong>Code:</strong> <code id="code7">AJIO20</code></p>
+          <p>Flat 20% off on all fashion items</p>
+          <button class="copy-btn" onclick="copyCode('code7')">Copy</button>
+        </div>
+
+        <div class="coupon-box">
+          <h3>Nykaa</h3>
+          <p><strong>Code:</strong> <code id="code8">NYKAA15</code></p>
+          <p>15% off on beauty & wellness products</p>
+          <button class="copy-btn" onclick="copyCode('code8')">Copy</button>
+        </div>
+
+      </div>
+    </div>
+    
+    <div class="right">
+      <div class="coupon-container2">
+        <div class="coupon-box">
+          <h3>Amazon</h3>
+          <p><strong>Code:</strong> <code id="code4">AMZAPP5</code></p>
+          <p>5% off on first app purchase</p>
+          <button class="copy-btn" onclick="copyCode('code4')">Copy</button>
+        </div>
+
+        <div class="coupon-box">
+          <h3>Flipkart</h3>
+          <p><strong>Code:</strong> <code id="code5">FLIPFIRST</code></p>
+          <p>Extra 10% off for new users</p>
+          <button class="copy-btn" onclick="copyCode('code5')">Copy</button>
+        </div>
+
+        <div class="coupon-box">
+          <h3>Myntra</h3>
+          <p><strong>Code:</strong> <code id="code6">FESTIVE50</code></p>
+          <p>₹500 off on orders above ₹1999</p>
+          <button class="copy-btn" onclick="copyCode('code6')">Copy</button>
+        </div>
+
+        <div class="coupon-box">
+          <h3>Tata Cliq</h3>
+          <p><strong>Code:</strong> <code id="code9">TATACLIQ10</code></p>
+          <p>10% instant discount on orders above ₹1500</p>
+          <button class="copy-btn" onclick="copyCode('code9')">Copy</button>
+        </div>
+
+        <div class="coupon-box">
+          <h3>Snapdeal</h3>
+          <p><strong>Code:</strong> <code id="code10">SNAPDEAL50</code></p>
+          <p>₹50 off on your first order</p>
+          <button class="copy-btn" onclick="copyCode('code10')">Copy</button>
+        </div>
+
+      </div>
+    </div>
+
+  <script>
+    // Copy coupon code
+    function copyCode(id) {
+      const code = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        alert(`Coupon "${code}" copied to clipboard!`);
+      }).catch(err => {
+        alert("Failed to copy coupon code.");
+      });
+    }
+  </script>
+
+</body>
+</html>
