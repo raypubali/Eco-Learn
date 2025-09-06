@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Challenge Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom right, #b6e07f, #dcfce7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #1e3a8a;
+    }
+
+    .points {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #16a34a;
+      margin-bottom: 20px;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .weekly {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .weekly.active {
+      background: #2563eb;
+      color: white;
+    }
+
+    .special {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .special.active {
+      background: #16a34a;
+      color: white;
+    }
+
+    .challenge-card {
+      background: linear-gradient(to bottom right, #eff6ff, #ecfdf5);
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    .challenge-card h2 {
+      margin-top: 0;
+      color: #111827;
+    }
+
+    .upload-section {
+      margin-top: 15px;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+    }
+
+    .coming-soon {
+      font-style: italic;
+      color: #6b7280;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Challenge Portal</h1>
+    <div class="points">Your Points: <span id="points">0</span></div>
+
+    <div class="btn-group">
+      <button class="weekly" onclick="showChallenge('weekly')">Weekly Challenge</button>
+      <button class="special" onclick="showChallenge('special')">Special Challenge</button>
+    </div>
+
+    <!-- Challenge Content -->
+    <div id="challenge-content"></div>
+  </div>
+
+  <script>
+    let points = 0;
+    let earned = false; // prevent multiple uploads from stacking points
+
+    function showChallenge(type) {
+      const content = document.getElementById("challenge-content");
+      const weeklyBtn = document.querySelector(".weekly");
+      const specialBtn = document.querySelector(".special");
+
+      // reset buttons
+      weeklyBtn.classList.remove("active");
+      specialBtn.classList.remove("active");
+
+      if (type === "weekly") {
+        weeklyBtn.classList.add("active");
+        content.innerHTML = `
+          <div class="challenge-card">
+            <h2>Challenge 1: “Save Water, Save Life”</h2>
+            <p>Implement one practical way to harvest rainwater. Upload your prototype below.</p>
+            
+            <div class="upload-section">
+              <label><b>Upload Prototype Photo:</b></label><br>
+              <input type="file" accept="image/*" onchange="previewImage(event)">
+              <div class="image-preview"></div>
+            </div>
+          </div>
+        `;
+        earned = false; // reset for new challenge
+      } else if (type === "special") {
+        specialBtn.classList.add("active");
+        content.innerHTML = `
+          <p class="coming-soon">🚧 Special challenges will be revealed soon. Stay tuned!</p>
+        `;
+      }
+    }
+
+    function previewImage(event) {
+      const preview = event.target.nextElementSibling; // div right after input
+      const file = event.target.files[0];
+      if (file) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        preview.innerHTML = "";
+        preview.appendChild(img);
+
+        // Add points only once
+        if (!earned) {
+          points += 100;
+          document.getElementById("points").textContent = points;
+          earned = true;
+        }
+      }
+    }
+  </script>
+</body>
+</html>

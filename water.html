@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Conservation Fun</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Comic Sans MS', sans-serif;
+    background: linear-gradient(to bottom, #a2d5f2, #ffffff);
+    overflow-x: hidden;
+    perspective: 1000px;
+    position: relative;
+  }
+
+  /* Background floating water drops */
+  .drop {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: #00bfff;
+    border-radius: 50%;
+    opacity: 0.7;
+    animation: fall linear infinite;
+    z-index: 0;
+  }
+
+  @keyframes fall {
+    0% { transform: translateY(-20px); opacity: 0.7; }
+    100% { transform: translateY(100vh); opacity: 0; }
+  }
+
+  /* Content above drops */
+  .content {
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    text-align: center;
+    background-color: #00bfff;
+    color: white;
+    padding: 20px;
+    font-size: 2em;
+    font-weight: bold;
+    animation: headerFloat 3s infinite alternate ease-in-out;
+  }
+
+  @keyframes headerFloat {
+    0% { transform: rotateX(0deg) translateY(0px);}
+    100% { transform: rotateX(5deg) translateY(10px);}
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+  }
+
+  h2 {
+    color: #0077b6;
+    text-shadow: 1px 1px 5px #00bfff;
+  }
+
+  ul {
+    padding-left: 20px;
+    line-height: 1.6;
+    transition: transform 0.3s;
+  }
+
+  ul li:hover {
+    transform: rotateY(10deg);
+    color: #00bfff;
+  }
+
+  .rain-prototype {
+    background: linear-gradient(145deg, #e0f7fa, #b2ebf2);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+    margin-top: 20px;
+    transform-style: preserve-3d;
+    transition: transform 0.5s;
+  }
+
+  .rain-prototype:hover {
+    transform: rotateY(15deg) rotateX(5deg) scale(1.05);
+    box-shadow: 10px 10px 25px rgba(0,0,0,0.3);
+  }
+
+  .video-section {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  iframe {
+    border-radius: 15px;
+    max-width: 100%;
+    transform: rotateY(0deg);
+    transition: transform 0.5s;
+  }
+
+  iframe:hover {
+    transform: rotateY(10deg) scale(1.02);
+  }
+
+  .learn-btn {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #00bfff;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.3s, background 0.3s;
+    text-decoration: none;
+  }
+
+  .learn-btn:hover {
+    transform: rotateY(10deg) scale(1.05);
+    background-color: #0077b6;
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating water drops -->
+<script>
+  const numDrops = 40;
+  for (let i = 0; i < numDrops; i++) {
+    const drop = document.createElement('div');
+    drop.classList.add('drop');
+    drop.style.left = Math.random() * window.innerWidth + 'px';
+    drop.style.animationDuration = (Math.random() * 5 + 3) + 's';
+    drop.style.width = drop.style.height = (Math.random() * 8 + 5) + 'px';
+    document.body.appendChild(drop);
+  }
+</script>
+
+<div class="content">
+  <header>💧 Water Conservation Fun 💧</header>
+
+  <div class="container">
+    <h2>💦 How to Save Water at Home</h2>
+    <ul>
+      <li>Turn off taps while brushing teeth or washing hands.</li>
+      <li>Fix leaking taps and pipes immediately.</li>
+      <li>Collect leftover water from washing vegetables and reuse for watering plants.</li>
+      <li>Take shorter showers and avoid unnecessary water usage.</li>
+      <li>Use a bucket instead of hose for washing vehicles or cleaning floors.</li>
+    </ul>
+
+    <div class="rain-prototype">
+      <h2>🏡 Build a Simple Rainwater Harvesting Prototype</h2>
+      <ol>
+        <li>Take a plastic bottle and cut the top off to create a funnel.</li>
+        <li>Place a piece of cloth at the opening to filter debris.</li>
+        <li>Use a tray or small bucket to collect the water dripping from the bottle.</li>
+        <li>Place it outside where rain can fall into it.</li>
+        <li>Observe how water is collected and think how to use it.</li>
+      </ol>
+    </div>
+
+    <div class="video-section">
+  <h2>🎥 Watch & Learn: Water Conservation</h2>
+  <iframe width="560" height="315" src="https://www.youtube.com/watch?v=xa7w0MLax9c" title="Water Conservation for Kids" frameborder="0" allowfullscreen></iframe>
+  <br>
+  <a class="learn-btn" href="https://www.youtube.com/watch?v=C65iqOSCZOY" target="_blank">Watch on YouTube</a>
+
+<!-- Mark as Learned Button (after video) -->
+<div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+  <button id="markLearnedBtn" class="learn-btn">Mark as Learned ✅ (+10 Points)</button>
+</div>
+<p style="text-align: right;">Total Points: <span id="points">0</span></p>
+</div>
+<script>
+  let totalPoints = 0;
+  const pointsDisplay = document.getElementById('points');
+  const markBtn = document.getElementById('markLearnedBtn');
+
+  markBtn.addEventListener('click', () => {
+    totalPoints += 10;               // Add 10 points
+    pointsDisplay.textContent = totalPoints;
+    markBtn.disabled = true;         // Disable after click
+    markBtn.textContent = "Learned ✅"; // Update text
+  });
+</script>
+
+
+</body>
+</html>

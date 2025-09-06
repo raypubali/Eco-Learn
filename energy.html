@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renewable Energy for Kids</title>
+<style>
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+  }
+
+  body {
+    font-family: 'Comic Sans MS', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background: linear-gradient(to bottom, #a8e6cf, #dcedc1);
+    position: relative;
+  }
+
+  /* Floating sun */
+  .sun {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, #ffeb3b, #ffc107);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+    box-shadow: 0 0 30px #ffd700;
+    z-index: 0;
+  }
+
+  /* Floating cloud */
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    width: 120px;
+    height: 60px;
+    top: 50px;
+    left: -150px;
+    animation: cloudMove 20s linear infinite;
+    z-index: 0;
+  }
+
+  .cloud:before, .cloud:after {
+    content: '';
+    position: absolute;
+    background: white;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+  }
+
+  .cloud:before {
+    top: -20px;
+    left: 10px;
+  }
+
+  .cloud:after {
+    top: -10px;
+    left: 40px;
+  }
+
+  @keyframes cloudMove {
+    0% { left: -150px; }
+    100% { left: 100%; }
+  }
+
+  header {
+    background-color: #56ab2f;
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 2em;
+    font-weight: bold;
+    z-index: 1;
+    position: relative;
+  }
+
+  section {
+    max-width: 900px;
+    margin: 20px auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 2px 2px 15px rgba(0,0,0,0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
+    z-index: 1;
+  }
+
+  section:hover {
+    transform: translateY(-5px);
+    box-shadow: 5px 5px 20px rgba(0,0,0,0.3);
+  }
+
+  h2 {
+    color: #3da648;
+  }
+
+  p, ul {
+    font-size: 1.1em;
+    line-height: 1.5em;
+  }
+
+  button {
+    background-color: #3da648;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 10px;
+    transition: background-color 0.3s, transform 0.3s;
+  }
+
+  button:hover {
+    background-color: #2e7d32;
+    transform: scale(1.1);
+  }
+
+  #prototype {
+    display: none;
+    margin-top: 20px;
+  }
+
+  iframe {
+    width: 100%;
+    height: 300px;
+    border: none;
+    border-radius: 10px;
+  }
+
+  footer {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 0.9em;
+    color: #555;
+    position: relative;
+    z-index: 1;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="sun"></div>
+<div class="cloud"></div>
+<div class="cloud" style="top:120px; animation-duration: 25s;"></div>
+<div class="cloud" style="top:200px; animation-duration: 30s;"></div>
+
+<header>Renewable Energy Fun!</header>
+
+<section>
+  <h2>What is Renewable Energy?</h2>
+  <p>Renewable energy comes from natural sources that never run out! The sun, wind, water, and even plants give us energy we can use safely. Unlike coal or oil, these sources don’t pollute the Earth.</p>
+</section>
+
+<section>
+  <h2>How We Renew Energy</h2>
+  <ul>
+    <li><strong>Solar Energy:</strong> Using sunlight to make electricity with solar panels.</li>
+    <li><strong>Wind Energy:</strong> Using wind to turn big turbines and create power.</li>
+    <li><strong>Hydropower:</strong> Using moving water in rivers to generate electricity.</li>
+    <li><strong>Biomass:</strong> Using plants and waste to create fuel.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Build a Simple Home Prototype</h2>
+  <p>You can make a mini solar-powered car at home!</p>
+  <button onclick="showPrototype()">Show Instructions</button>
+  <div id="prototype">
+    <ul>
+      <li>Materials: Small solar panel, motor, wheels, cardboard base, tape.</li>
+      <li>Step 1: Attach the motor to the wheels.</li>
+      <li>Step 2: Connect the solar panel to the motor wires.</li>
+      <li>Step 3: Place the motor-wheel setup on the cardboard base.</li>
+      <li>Step 4: Put the solar car under sunlight and watch it move!</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Watch a Fun Video!</h2>
+  <iframe src="https://www.youtube.com/embed/2l6joqTj2nM" title="Renewable Energy for Kids" allowfullscreen></iframe>
+</section>
+<!-- Mark as Learned Button (after video) -->
+<div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+  <button id="markLearnedBtn" class="learn-btn">Mark as Learned ✅ (+10 Points)</button>
+</div>
+<p style="text-align: right;">Total Points: <span id="points">0</span></p>
+</div>
+<script>
+  let totalPoints = 0;
+  const pointsDisplay = document.getElementById('points');
+  const markBtn = document.getElementById('markLearnedBtn');
+
+  markBtn.addEventListener('click', () => {
+    totalPoints += 10;               // Add 10 points
+    pointsDisplay.textContent = totalPoints;
+    markBtn.disabled = true;         // Disable after click
+    markBtn.textContent = "Learned ✅"; // Update text
+  });
+</script>
+
+<footer>
+  Intended Audience: 9-10 years old | Made with ❤️ for curious young scientists
+</footer>
+
+<script>
+  function showPrototype() {
+    const proto = document.getElementById('prototype');
+    proto.style.display = proto.style.display === 'none' ? 'block' : 'none';
+  }
+</script>
+
+</body>
+</html>
