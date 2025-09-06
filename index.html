@@ -69,6 +69,13 @@
   .nav-btn.logout { background:#e46b6b; color:#fff; }
   .small { font-size:12px; color:rgba(0,0,0,0.55); text-align:center; margin-top:6px; }
   [data-theme='dark'] .small{color:rgba(255,255,255,0.65)}
+  a.nav-btn {
+  display: inline-block;
+  text-decoration: none;  /* removes underline */
+  color: var(--dark);     /* same text color as button */
+  text-align: center;
+}
+
 
   /* Main area */
   .main { flex:1; display:flex; flex-direction:column; gap:14px; }
@@ -162,16 +169,23 @@
     <div id="streakLabel" style="margin:10px 0; font-weight:600; color:#e65100;">
        0 day streak
     </div>
-      <div class="nav-list">
-        <button class="nav-btn active" data-target="dash">About</button>
-        <button class="nav-btn" data-target="learn">Learn</button>
-        <button class="nav-btn" data-target="quiz">Quiz</button>
-        <button class="nav-btn" data-target="badges">Badges</button>
-        <button class="nav-btn" data-target="leaderboard">Leaderboard</button>
-        <button class="nav-btn" data-target="reader">Reader</button>
-        <button class="nav-btn" data-target="StoryTime">Story Time</button>
-        <button class="nav-btn" data-target="MarketPlace">MarketPlace</button>
-      </div>
+     <div class="nav-list">
+  <button class="nav-btn active" data-target="dash">About</button>
+  <button class="nav-btn" data-target="learn">Learn</button>
+   <a href="challenge.html" class="nav-btn">Challenge</a>
+  <button class="nav-btn" data-target="quiz">Quiz</button>
+  <button class="nav-btn" data-target="badges">Badges</button>
+  <button class="nav-btn" data-target="leaderboard">Leaderboard</button>
+  <button class="nav-btn" data-target="reader">Reader</button>
+  
+  
+  <!-- Fixed Ecomart link -->
+  <a href="storygame.html" class="nav-btn">StoryTime</a>
+  <a href="ecomart.html" class="nav-btn">Ecomart</a>
+ 
+  
+</div>
+
 
       <div style="flex:1"></div>
       <div class="small">Click your avatar to cycle colors · Toggle theme in header</div>
@@ -189,7 +203,7 @@
         <div class="controls">
           <div class="stats">
             <div class="stat-bubble"><span class="stat-dot"></span> Eco Points: <span id="ecoPoints" class="count-animate">0</span></div>
-            <div class="stat-bubble"><span class="stat-dot"></span> Game Points: <span id="ecoPoints" class="count-animate">0</span></div>
+            
             <div class="stat-bubble"><span class="stat-dot"></span> Badges: <span id="badgeCount" class="count-animate">0</span></div>
           </div>
           <button id="themeToggle" class="btn btn-ghost" title="Toggle dark/light">Toggle Theme</button>
@@ -207,10 +221,11 @@
       <section id="learn" class="card section" aria-labelledby="learn">
         <h3 style="margin-top:0">Learn</h3>
         <p>Select a topic to open the info + game split layout.</p>
+        
 
         <div class="domains-grid" role="list" aria-label="domains">
           <div class="domain-card" role="listitem" data-sub="water">💧 Water Conservation</div>
-          <div class="domain-card" role="listitem" data-sub="agriculture">🌱 Sustainable Agriculture</div>
+          <div class="domain-card" role="listitem" data-sub="agriculture">🌱 Tree Plantation</div>
           <div class="domain-card" role="listitem" data-sub="energy">🔋 Renewable Energy</div>
           <div class="domain-card" role="listitem" data-sub="forest">🌳 Forest Diversity (info)</div>
         </div>
@@ -223,6 +238,8 @@
               <div class="topic-text" id="topicText">Topic description appears here.</div>
               <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
                 <button id="markLearned" class="btn btn-primary">Mark as Learned (+10 points)</button>
+                <button id="learnMoreBtn" class="btn btn-primary">Learn More</button>
+
               </div>
             </div>
             <div class="right">
@@ -270,22 +287,9 @@
   </div>
 </section>
 
-<!-- Story Time -->
-<section id="StoryTime" class="card section" aria-labelledby="StoryTime">
-  <h3 style="margin-top:0">Story Time</h3>
-  <div style="font-style:italic; color:#2e471e;">
-    <p>Here your stories about environmental heroes, eco-missions, etc. will appear.</p>
-  </div>
-</section>
 
 
-<!-- MarketPlace -->
-<section id="MarketPlace" class="card section" aria-labelledby="MarketPlace">
-  <h3 style="margin-top:0">MarketPlace</h3>
-  <div style="font-style:italic; color:#2e471e;">
-    <p>Get coupons based on eco points and earn items!!</p>
-  </div>
-</section>
+
 
 
     </main>
@@ -366,7 +370,7 @@ function showSection(id){ sections.forEach(s=>s.classList.remove('active')); con
    ---------------------- */
 const topics = {
   water: { title: 'Water Conservation', text: `Use water efficiently to reduce waste and protect resources.\n\nWhy it's important:\n• Ensures water availability\n• Protects ecosystems\n• Saves energy and money` },
-  agriculture: { title: 'Sustainable Agriculture', text: `Practices that protect soil health and biodiversity.\n\nWhy it's important:\n• Long-term food security\n• Reduces chemical pollution` },
+  agriculture: { title: 'Tree Plantation', text: `Practices that promote tree plantation and green cover.\n\nWhy it's important:\n• Improves air quality\n• Provides habitat for wildlife\n• Helps combat climate change\n• Prevents soil erosion` },
   energy: { title: 'Renewable Energy', text: `Solar, wind and hydro sources reduce carbon emissions.\n\nWhy it's important:\n• Reduces pollution\n• Sustainable power supply` },
   forest: { title: 'Forest Diversity', text: `Forests provide habitat, clean air & climate regulation.\nProtecting forest diversity preserves ecosystems and species.` }
 };
@@ -416,6 +420,7 @@ function initWaterGame() {
   const bucket = { x: (canvas.width / 2) - 40, y: canvas.height - 48, w: 80, h: 34 };
   let drops = [];
   let gamePoints = 0;
+  let learningPoints = Number(localStorage.getItem('ecolearn_hp')) || 10;
   let bgWaves = Array.from({ length: 6 }, (_, i) => ({ y: i * (canvas.height / 6), amp: 6 + Math.random() * 8, speed: 0.2 + Math.random() * 0.3, phase: Math.random() * Math.PI * 2 }));
 
   function spawnDrop() {
@@ -455,11 +460,15 @@ function initWaterGame() {
     ctx.globalAlpha = 1;
   }
 
-  function drawGamePoints() {
-    ctx.font = '18px system-ui';
-    ctx.fillStyle = '#ffd54f';
-    ctx.fillText(`GP: ${gamePoints}`, 14, 24);
-  }
+function drawStats() {
+  ctx.font = '18px system-ui';
+  ctx.fillStyle = '#ffd54f';
+  ctx.fillText(`GP: ${gamePoints}`, 14, 24);
+
+  ctx.fillStyle = '#4caf50';
+  ctx.fillText(`HP: ${learningPoints}`, 14, 48);
+}
+
 
   function loop(t) {
     drawBG(t);
@@ -487,11 +496,22 @@ function initWaterGame() {
         drops.splice(i, 1);
         earnPoints(2);
         gamePoints += 2;
-      } else if (d.y - d.r > canvas.height) drops.splice(i, 1);
+      } else if (d.y - d.r > canvas.height) {
+          drops.splice(i, 1);
+          learningPoints -= 1;   // lose HP if drop missed
+          localStorage.setItem('ecolearn_hp', learningPoints);
+         if (learningPoints < gamePoints) {
+            alert("Game Over! HP is less than GP.");
+            cancelAnimationFrame(gameLoopId);
+            window.removeEventListener('keydown', onKey);
+            return;
+  }
+}
+
     }
 
     drawBucket();
-    drawGamePoints();
+    drawStats();
     gameLoopId = requestAnimationFrame(loop);
   }
 
@@ -691,7 +711,7 @@ function renderQuiz(){ const area = document.getElementById('quizArea'); area.in
    ---------------------- */
 function renderBadges(){ const container = document.getElementById('badgesList'); container.innerHTML=''; if(badges.length===0){ container.innerHTML='<div style="opacity:.8">No badges yet — play and earn them!</div>'; return; } badges.forEach(b=>{ const el=document.createElement('div'); el.className='badge'; el.title=b; el.textContent=b; container.appendChild(el); }); }
 function renderLeaderboard(){ const el = document.getElementById('leaderboardList'); el.innerHTML=''; if(!leaderboard[user.name]) leaderboard[user.name]=ecoPoints; const sorted = Object.entries(leaderboard).sort((a,b)=>b[1]-a[1]); sorted.forEach(([name,pts], idx)=>{ const row=document.createElement('div'); row.className='leader-item'; const left=document.createElement('div'); left.className='lead-left'; const av=document.createElement('div'); av.className='avatar small'; av.textContent=initialsFromName(name); av.setAttribute('style', avatarStyle((avatarHue + (idx*32))%360)); const nm=document.createElement('div'); nm.className='lead-name'; nm.textContent=`${idx+1}. ${name}`; left.appendChild(av); left.appendChild(nm); const right=document.createElement('div'); right.textContent=`${pts} pts`; row.appendChild(left); row.appendChild(right); el.appendChild(row); }); }
-
+function earnPoints(n){ const prev = ecoPoints; ecoPoints += n; animateCount(pointsLabel, prev, ecoPoints); if(!leaderboard[user.name]) leaderboard[user.name] = 0; leaderboard[user.name] = ecoPoints; persist(); renderLeaderboard(); updateBadgeStatus(); playTone('correct'); }
 /* ----------------------
    Theme & sound toggles
    ---------------------- */
@@ -726,6 +746,23 @@ function drawGamePoints(){
     ctx.restore();
 }
 
+/* ----------------------
+   Draw Highest Points on canvas
+   ---------------------- */
+function drawGamePoints(){
+    if(!gameCtx || !gameCanvas) return;
+    const ctx = gameCtx;
+    ctx.save();
+    ctx.font = '20px system-ui';
+    ctx.fillStyle = '#ffeb3b';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText(`HP: ${ecoPoints}`, 12, 12);
+    ctx.restore();
+}
+
 // Wrap existing game loops to include drawGamePoints
 // WATER GAME
 const originalWaterLoop = initWaterGame;
@@ -744,6 +781,14 @@ const originalRocketLoop = initRocketGame;
 function rocketLoopWrapper(){
     drawGamePoints();
 }
+
+
+
+  // Example: Switch topics dynamically
+  // showTopic('tree'); // Uncomment to switch to Tree Plantation
+
+
+
 
 // Integration: inside each game loop, just call drawGamePoints()
 // For example, in initWaterGame -> inside loop(t) after drawBucket(): drawGamePoints();
