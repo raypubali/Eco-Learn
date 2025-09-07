@@ -1,15 +1,3 @@
-<!--
-Eco Story Game – Embeddable Web Component
-Author: ChatGPT
-
-How to use:
-1) Drop this single HTML file into your platform OR copy the <div id="eco-game"></div> and <script>...</script> parts into your page.
-2) The game mounts into a container with id="eco-game". If it doesn't exist, it will create one at the end of <body>.
-3) Customize the STORY_NODES constant to change the narrative; tweak STAT_WEIGHTS and thresholds to tune endings.
-
-No external libraries. Fully responsive. Accessible (keyboard & ARIA labels). Persists progress in localStorage.
--->
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -17,291 +5,201 @@ No external libraries. Fully responsive. Accessible (keyboard & ARIA labels). Pe
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Eco Story Game</title>
   <style>
-    :root {
-      --bg: #0e1116;
-      --panel: #161a22;
-      --muted: #8b9bb4;
-      --text: #eef2f7;
-      --accent: #6ee7b7;
-      --accent-2: #60a5fa;
-      --danger: #fb7185;
-      --warning: #fbbf24;
-      --radius: 16px;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    :root{
+      --bg1:#dff7d6;
+      --bg2:#b6e07f;
+      --accent:#3da648;
+      --accent-2:#56ab2f;
+      --dark:#1f3b1a;
+      --muted:#8dbb75;
+      --card:#f5fbef;
+      --ink:#10240d;
+      --glass:rgba(255,255,255,0.55);
     }
-    * { box-sizing: border-box; }
-    body { margin:0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    [data-theme='dark']{
+      --bg1:#0b1410; --bg2:#072014; --card:#0f1a14; --ink:#eaf7e9; --muted:#6aa86d; --glass: rgba(255,255,255,0.08);
+    }
+
+    *{box-sizing:border-box;font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;}
+    html,body{height:100%;}
+    body{
+      margin:0;min-height:100vh;color:var(--dark);
+      background: radial-gradient(1200px 800px at 10% -10%, #e9fbdf 0%, #c8efa2 35%, #b8e184 55%, #b3df7c 70%, #a9d36f 100%) fixed;
+      overflow-x:hidden;transition:background .45s ease, color .25s ease;
+    }
+    body[data-theme='dark']{ background: radial-gradient(1200px 800px at 10% -10%, #07110b 0%, #08301b 35%, #0a3a1f 55%); color:var(--ink)}
+
+    body::before, body::after{content:"";position:fixed;inset:auto;z-index:-1;filter: blur(60px);opacity:.45;pointer-events:none;width:520px;height:520px;border-radius:50%;background: radial-gradient(closest-side, #9be271, transparent);animation: floatBlob 22s ease-in-out infinite}
+    body::before{left:-120px;top:-120px}
+    body::after{right:-160px;bottom:-160px;animation-duration:26s;animation-delay:-4s}
+    @keyframes floatBlob{0%{transform:translateY(0) scale(1)}50%{transform:translateY(18px) scale(1.06)}100%{transform:translateY(0) scale(1)}}
 
     .eco-wrap{ max-width: 980px; margin: 24px auto; padding: 16px; }
 
     .eco-card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+      background:linear-gradient(180deg,var(--card),#eef9e6);
+      border-radius:16px;padding:18px;
+      box-shadow: 0 10px 30px rgba(41,77,29,.08), inset 0 0 40px 4px rgba(158,210,118,0.10);
+      backdrop-filter:saturate(1.1);
+      transition: box-shadow .25s ease, transform .25s ease;
     }
+    [data-theme='dark'] .eco-card{background:linear-gradient(180deg,var(--card),#0f2a17);box-shadow: 0 8px 30px rgba(0,0,0,.5)}
+
     .eco-header{
       display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
-      padding: 18px 20px; background: var(--panel);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
     }
-    .eco-title{ font-size: clamp(20px, 2.6vw, 28px); font-weight: 700; letter-spacing: .2px; }
+    .eco-title{ font-size: clamp(20px, 2.6vw, 28px); font-weight: 700; letter-spacing: .2px; color:var(--dark); }
+    [data-theme='dark'] .eco-title{ color:var(--ink); }
     .eco-sub{ color: var(--muted); font-size: 13px; }
     .eco-actions{ display:flex; gap:10px; }
-    .btn{ appearance: none; border:0; padding:10px 14px; border-radius: 12px; background: #1f2633; color: var(--text); cursor: pointer; transition: .2s transform, .2s opacity, .2s background; }
+    .btn{ appearance: none; border:0; padding:10px 14px; border-radius: 12px; cursor: pointer; transition: .2s transform, .2s opacity, .2s background; font-weight:700; }
     .btn:hover{ transform: translateY(-1px); }
     .btn:active{ transform: translateY(0); }
-    .btn-primary{ background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #0b1220; font-weight: 700; }
-    .btn-ghost{ background: transparent; border: 1px solid rgba(255,255,255,0.12); }
+    .btn-primary{ background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #fff; }
+    .btn-ghost{ background: transparent; border: 1px solid rgba(0,0,0,0.12); color:var(--dark); }
+    [data-theme='dark'] .btn-ghost{ border: 1px solid rgba(255,255,255,0.12); color: var(--ink); }
 
-    .eco-top{
-      display:grid; grid-template-columns: 1.3fr .7fr; gap: 18px; padding: 20px;
-    }
+    .eco-top{ display:grid; grid-template-columns: 1.3fr .7fr; gap: 18px; padding: 20px; }
     @media (max-width: 880px){ .eco-top{ grid-template-columns: 1fr; } }
 
-    .scene{
-      background: #0f1420; border:1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 18px; min-height: 220px;
-      display:flex; flex-direction: column; gap: 14px;
-    }
+    .scene{ border-radius: 14px; padding: 18px; min-height: 220px; display:flex; flex-direction: column; gap: 14px; background:var(--card); }
     .scene .label{ color: var(--muted); font-size: 12px; letter-spacing: .6px; text-transform: uppercase; }
-    .scene .text{ font-size: clamp(16px, 2.3vw, 19px); }
+    .scene .text{ font-size: clamp(16px, 2.3vw, 19px); color:var(--dark); }
+    [data-theme='dark'] .scene .text{ color:var(--ink); }
 
     .choices{ display:grid; gap: 12px; margin-top: 6px; }
-    .choice{ text-align:left; width:100%; }
+    .choice{ text-align:left; width:100%; background:var(--glass); border-radius:12px; padding:10px; color:var(--dark); }
+    [data-theme='dark'] .choice{ color:var(--ink); background:rgba(255,255,255,0.08); }
 
-    .stats{
-      background: #0f1420; border:1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; display:flex; flex-direction:column; gap:12px;
-    }
+    .stats{ border-radius: 14px; padding: 16px; display:flex; flex-direction:column; gap:12px; background:var(--card); }
     .stat{ display:grid; grid-template-columns: 120px 1fr 54px; gap: 10px; align-items:center; }
     .stat-name{ color: var(--muted); font-size: 13px; }
-    .bar{ background: #0a0e16; border-radius: 999px; overflow: hidden; height: 10px; border:1px solid rgba(255,255,255,0.06); }
+    .bar{ background: #e8f6e1; border-radius: 999px; overflow: hidden; height: 10px; border:1px solid rgba(0,0,0,0.06); }
     .bar > i{ display:block; height:100%; width: 50%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .35s ease; }
     .stat-val{ text-align:right; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
 
-    .eco-foot{ padding: 16px 20px; display:flex; justify-content: space-between; align-items: center; gap: 10px; border-top:1px solid rgba(255,255,255,0.06); background: #0d121b; }
+    .eco-foot{ padding: 16px 20px; display:flex; justify-content: space-between; align-items: center; gap: 10px; border-top:1px solid rgba(0,0,0,0.06); background: var(--card); }
     .eco-foot small{ color: var(--muted); }
 
-    .bg-stage{ position: relative; height: 160px; background: linear-gradient(180deg, #071018, #0b1a29); border-top:1px solid rgba(255,255,255,0.06); }
-    .bg-stage svg{ position:absolute; inset:0; width:100%; height:100%; }
+    .tag{ display:inline-flex; align-items:center; gap:8px; font-size: 12px; color:#fff; background: var(--accent); border-radius: 999px; padding: 6px 10px; font-weight: 700; }
+    .tag.bad{ background: #e34b4b; }
+    .tag.warn{ background: #fbbf24; color:#231a08; }
 
-    .tag{ display:inline-flex; align-items:center; gap:8px; font-size: 12px; color: #0c1420; background: var(--accent); border-radius: 999px; padding: 6px 10px; font-weight: 700; }
-    .tag.bad{ background: var(--danger); color: #1a0b0e; }
-    .tag.warn{ background: var(--warning); color: #231a08; }
-
-    .ending{ font-size: clamp(18px,2.6vw,22px); font-weight: 800; }
+    .ending{ font-size: clamp(18px,2.6vw,22px); font-weight: 800; color:var(--dark); }
+    [data-theme='dark'] .ending{ color:var(--ink); }
     .muted{ color: var(--muted); }
 
-    /* Focus visuals */
     .btn:focus-visible, .choice:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
   </style>
 </head>
-<body>
+<body data-theme="light">
   <div id="eco-game"></div>
 
   <script>
   (function(){
-    const STORAGE_KEY = 'eco_story_game_v1';
-
+    const STORAGE_KEY = 'eco_story_game_v2';
     const INITIAL_STATS = { air: 50, water: 50, wildlife: 50, wellbeing: 50 };
     const STAT_NAMES = { air: 'Air Quality', water: 'Water Security', wildlife: 'Wildlife Health', wellbeing: 'Human Wellbeing' };
+    const MAX_TURNS = 6; const FLOOR = 0, CEIL = 100;
 
-    // How endings are scored/weighted in the final evaluation
-    const STAT_WEIGHTS = { air: 1, water: 1, wildlife: 1, wellbeing: 1 };
+    let theme = localStorage.getItem('ecolearn_theme') || 'light';
+    document.body.setAttribute('data-theme', theme);
 
-    const MAX_TURNS = 6; // number of choices before evaluation
-    const FLOOR = 0, CEIL = 100;
-
-    // Narrative graph: each node has id, text, choices[] with (label, effects, next)
-    // Use next: 'EVAL' to jump to ending evaluation screen.
     const STORY_NODES = {
       start: {
-        text: `It\'s 2035. Your city faces power shortages, rising heat, and smog. As the newly elected sustainability lead, your decisions over the next few years will set the course. Where do you begin?`,
+        text: `It is 2035. Your city faces power shortages, rising heat, and smog. Where do you begin?`,
         choices: [
-          { label: 'Invest in a 100MW solar park with storage', effects: { air:+5, water:+2, wildlife:+1, wellbeing:-1 }, next: 'waste' },
-          { label: 'Approve a coal plant for quick relief', effects: { air:-8, water:-3, wildlife:-2, wellbeing:+3 }, next: 'waste' }
+          { label: 'Invest in a solar park', effects: { air:+5, water:+2, wildlife:+1, wellbeing:-1 }, next: 'waste' },
+          { label: 'Approve a coal plant', effects: { air:-8, water:-3, wildlife:-2, wellbeing:+3 }, next: 'waste' }
         ]
       },
       waste: {
-        text: `Overflowing landfills and plastic in rivers spark protests. Your waste policy?`,
+        text: `Overflowing landfills spark protests. Your waste policy?`,
         choices: [
-          { label: 'Ban single‑use plastics; fund MRFs & compost hubs', effects: { air:+2, water:+6, wildlife:+5, wellbeing:-1 }, next: 'transport' },
-          { label: 'Status quo; focus on cleanup drives only', effects: { air:-1, water:-4, wildlife:-3, wellbeing:+1 }, next: 'transport' }
+          { label: 'Ban plastics and fund compost hubs', effects: { air:+2, water:+6, wildlife:+5, wellbeing:-1 }, next: 'transport' },
+          { label: 'Do nothing new', effects: { air:-1, water:-4, wildlife:-3, wellbeing:+1 }, next: 'transport' }
         ]
       },
       transport: {
-        text: `Traffic locks the city daily. Emissions soar. Transport reform plan?`,
+        text: `Traffic jams lock the city daily. Transport reform?`,
         choices: [
-          { label: 'Rapid bus lanes + safe cycling grid', effects: { air:+6, water:+1, wildlife:+1, wellbeing:+2 }, next: 'coast' },
-          { label: 'Widen highways; subsidize car loans', effects: { air:-6, water:-1, wildlife:-2, wellbeing:+2 }, next: 'coast' }
+          { label: 'Rapid bus lanes + cycling grid', effects: { air:+6, water:+1, wildlife:+1, wellbeing:+2 }, next: 'coast' },
+          { label: 'Widen highways', effects: { air:-6, water:-1, wildlife:-2, wellbeing:+2 }, next: 'coast' }
         ]
       },
       coast: {
-        text: `Developers want to expand the port into protective mangroves. Fisherfolk resist. Decision?`,
+        text: `Developers want to expand into mangroves.`,
         choices: [
-          { label: 'Protect mangroves; shift port to brownfield site', effects: { air:+1, water:+5, wildlife:+7, wellbeing:+1 }, next: 'food' },
-          { label: 'Approve expansion with minimal buffers', effects: { air:-2, water:-5, wildlife:-7, wellbeing:+2 }, next: 'food' }
+          { label: 'Protect mangroves', effects: { air:+1, water:+5, wildlife:+7, wellbeing:+1 }, next: 'food' },
+          { label: 'Allow expansion', effects: { air:-2, water:-5, wildlife:-7, wellbeing:+2 }, next: 'food' }
         ]
       },
       food: {
-        text: `Droughts hit farms. Food prices jump. Support plan?`,
+        text: `Droughts hit farms. Support plan?`,
         choices: [
-          { label: 'Drip irrigation + millet incentives + agroforestry', effects: { air:+2, water:+6, wildlife:+3, wellbeing:+1 }, next: 'industry' },
-          { label: 'Groundwater pumps + fertilizer subsidy', effects: { air:-2, water:-7, wildlife:-2, wellbeing:+2 }, next: 'industry' }
+          { label: 'Drip irrigation + agroforestry', effects: { air:+2, water:+6, wildlife:+3, wellbeing:+1 }, next: 'industry' },
+          { label: 'Groundwater pumps', effects: { air:-2, water:-7, wildlife:-2, wellbeing:+2 }, next: 'industry' }
         ]
       },
       industry: {
-        text: `Factories seek tax breaks. Environmental norms slow permits, they say. Your move?`,
+        text: `Factories seek tax breaks. Your move?`,
         choices: [
-          { label: 'Green tax cuts only; strict emissions monitoring', effects: { air:+5, water:+2, wildlife:+2, wellbeing:+1 }, next: 'EVAL' },
-          { label: 'Fast‑track all permits; relax inspections', effects: { air:-7, water:-4, wildlife:-4, wellbeing:+2 }, next: 'EVAL' }
+          { label: 'Green tax cuts only', effects: { air:+5, water:+2, wildlife:+2, wellbeing:+1 }, next: 'EVAL' },
+          { label: 'Fast-track all permits', effects: { air:-7, water:-4, wildlife:-4, wellbeing:+2 }, next: 'EVAL' }
         ]
       }
     };
 
-    // --- State ---
-    const state = {
-      stats: { ...INITIAL_STATS },
-      turns: 0,
-      node: 'start',
-      history: [] // {node, choiceLabel, effects}
-    };
+    const state = { stats: { ...INITIAL_STATS }, turns: 0, node: 'start', history: [] };
 
-    // Load from storage if present
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if(saved && saved.version === 1){ Object.assign(state, saved.state); }
-
-    // --- DOM helpers ---
-    const root = document.getElementById('eco-game') || (()=>{ const d=document.createElement('div'); d.id='eco-game'; document.body.appendChild(d); return d; })();
-
+    const root = document.getElementById('eco-game');
     root.innerHTML = `
       <div class="eco-wrap">
-        <div class="eco-card" role="region" aria-label="Eco Story Game">
+        <div class="eco-card">
           <div class="eco-header">
             <div>
               <div class="eco-title">The Future We Choose</div>
-              <div class="eco-sub">An interactive sustainability story – every decision reshapes your city.</div>
+              <div class="eco-sub">An interactive sustainability story.</div>
             </div>
             <div class="eco-actions">
-              <button class="btn btn-ghost" id="btn-save" title="Save progress" aria-label="Save progress">Save</button>
-              <button class="btn btn-ghost" id="btn-load" title="Load progress" aria-label="Load progress">Load</button>
-              <button class="btn" id="btn-restart" title="Restart game" aria-label="Restart game">Restart</button>
+              <button class="btn btn-ghost" id="btn-save">Save</button>
+              <button class="btn btn-ghost" id="btn-load">Load</button>
+              <button class="btn btn-primary" id="btn-restart">Restart</button>
+              <button class="btn btn-ghost" id="themeToggle">Toggle Theme</button>
             </div>
           </div>
-
           <div class="eco-top">
-            <section class="scene" aria-live="polite">
+            <section class="scene">
               <div class="label">Scene</div>
               <div class="text" id="scene-text"></div>
               <div class="choices" id="choices"></div>
             </section>
-
-            <aside class="stats" aria-label="City Indicators">
-              ${Object.keys(INITIAL_STATS).map(k=>`
-                <div class="stat" data-key="${k}">
-                  <div class="stat-name">${STAT_NAMES[k]}</div>
-                  <div class="bar"><i style="width:${INITIAL_STATS[k]}%"></i></div>
-                  <div class="stat-val">${INITIAL_STATS[k]}%</div>
-                </div>`).join('')}
-            </aside>
+            <aside class="stats" id="stats"></aside>
           </div>
-
-          <div class="bg-stage" aria-hidden="true">
-            <svg viewBox="0 0 100 30" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="skyGood" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#93c5fd"/>
-                  <stop offset="100%" stop-color="#6ee7b7"/>
-                </linearGradient>
-                <linearGradient id="skyBad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#334155"/>
-                  <stop offset="100%" stop-color="#0f172a"/>
-                </linearGradient>
-              </defs>
-              <rect id="sky" x="0" y="0" width="100" height="30" fill="url(#skyGood)" opacity="0.9"></rect>
-              <!-- city silhouette -->
-              <g id="city" opacity="0.95">
-                <rect x="0" y="22" width="100" height="8" fill="#0b1220"/>
-                <rect x="8" y="16" width="10" height="6" fill="#0d1525"/>
-                <rect x="20" y="12" width="8" height="10" fill="#0d1525"/>
-                <rect x="30" y="14" width="6" height="8" fill="#0d1525"/>
-                <rect x="40" y="10" width="12" height="12" fill="#0d1525"/>
-                <rect x="55" y="15" width="7" height="7" fill="#0d1525"/>
-                <rect x="65" y="13" width="10" height="9" fill="#0d1525"/>
-                <rect x="78" y="11" width="8" height="11" fill="#0d1525"/>
-                <!-- trees -->
-                <circle id="tree1" cx="12" cy="21" r="2.1" fill="#22c55e"/>
-                <circle id="tree2" cx="28" cy="21.5" r="2.6" fill="#22c55e"/>
-                <circle id="tree3" cx="72" cy="21.2" r="2.3" fill="#22c55e"/>
-                <!-- smoke stacks -->
-                <g id="smoke" opacity="0.15">
-                  <circle cx="44" cy="9" r="1.4" fill="#94a3b8"/>
-                  <circle cx="46" cy="8" r="1.1" fill="#94a3b8"/>
-                  <circle cx="48" cy="7" r="0.8" fill="#94a3b8"/>
-                </g>
-              </g>
-            </svg>
-          </div>
-
           <div class="eco-foot">
-            <div>
-              <span id="turns-tag" class="tag">Turn <b id="turns">0</b> / ${MAX_TURNS}</span>
-              <span id="status-tag" class="tag warn" style="display:none;">At Risk</span>
-            </div>
-            <small class="muted">Tip: Try different paths to unlock <b>Green Future</b>, <b>Balanced</b>, and <b>Collapse</b> endings.</small>
+            <div><span id="turns-tag" class="tag">Turn <b id="turns">0</b> / ${MAX_TURNS}</span><span id="status-tag" class="tag warn" style="display:none;">At Risk</span></div>
+            <small class="muted">Tip: Try different paths to unlock endings.</small>
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
 
     const el = {
       sceneText: root.querySelector('#scene-text'),
       choices: root.querySelector('#choices'),
       turns: root.querySelector('#turns'),
-      turnsTag: root.querySelector('#turns-tag'),
       statusTag: root.querySelector('#status-tag'),
-      statRows: Object.fromEntries([...root.querySelectorAll('.stat')].map(row => [row.dataset.key, row])),
-      sky: root.querySelector('#sky'),
-      smoke: root.querySelector('#smoke'),
-      btnSave: root.querySelector('#btn-save'),
-      btnLoad: root.querySelector('#btn-load'),
-      btnRestart: root.querySelector('#btn-restart'),
+      stats: root.querySelector('#stats')
     };
 
-    // --- Rendering ---
-    function clamp(v){ return Math.max(FLOOR, Math.min(CEIL, v)); }
-
-    function updateStats(effects){
-      for(const k of Object.keys(state.stats)){
-        state.stats[k] = clamp(state.stats[k] + (effects?.[k] || 0));
-      }
-      // risk indicator if any stat < 30
-      const atRisk = Object.values(state.stats).some(v => v < 30);
-      el.statusTag.style.display = atRisk ? 'inline-flex' : 'none';
-      el.statusTag.className = 'tag ' + (Object.values(state.stats).some(v => v < 15) ? 'bad' : 'warn');
-
-      for(const k of Object.keys(state.stats)){
-        const row = el.statRows[k];
-        row.querySelector('.bar > i').style.width = state.stats[k] + '%';
-        row.querySelector('.stat-val').textContent = state.stats[k] + '%';
-      }
-      // background mood
-      const avg = Object.values(state.stats).reduce((a,b)=>a+b,0)/4;
-      el.sky.setAttribute('fill', avg >= 55 ? 'url(#skyGood)' : 'url(#skyBad)');
-      el.smoke.setAttribute('opacity', String(Math.max(0.05, 0.4 - (avg/200))));
+    function renderStats(){
+      el.stats.innerHTML = Object.keys(state.stats).map(k=>`<div class="stat"><div class="stat-name">${STAT_NAMES[k]}</div><div class="bar"><i style="width:${state.stats[k]}%"></i></div><div class="stat-val">${state.stats[k]}%</div></div>`).join('');
     }
 
-    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({ version:1, state })); toast('Progress saved.'); }
-    function load(){ const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if(s){ Object.assign(state, s.state); renderNode(); updateStats(); toast('Progress loaded.'); } else { toast('No save found.'); } }
-    function restart(){ Object.assign(state, { stats:{...INITIAL_STATS}, turns:0, node:'start', history:[] }); renderNode(); updateStats(); toast('Game restarted.'); }
-
-    function toast(msg){
-      const t = document.createElement('div');
-      t.textContent = msg;
-      Object.assign(t.style, { position:'fixed', inset:'auto 16px 16px auto', background:'#111827', color:'#e5e7eb', padding:'10px 12px', border:'1px solid #374151', borderRadius:'10px', boxShadow:'var(--shadow)', zIndex:9999, opacity:0, transition:'opacity .2s, transform .2s', transform:'translateY(6px)' });
-      document.body.appendChild(t);
-      requestAnimationFrame(()=>{ t.style.opacity = 1; t.style.transform='translateY(0)'; });
-      setTimeout(()=>{ t.style.opacity=0; t.style.transform='translateY(6px)'; setTimeout(()=>t.remove(), 200); }, 1400);
+    function updateStats(effects){
+      for(const k of Object.keys(state.stats)) state.stats[k] = Math.max(FLOOR, Math.min(CEIL, state.stats[k] + (effects[k]||0)));
+      renderStats();
     }
 
     function renderNode(){
@@ -309,106 +207,38 @@ No external libraries. Fully responsive. Accessible (keyboard & ARIA labels). Pe
       const node = STORY_NODES[state.node];
       el.sceneText.textContent = node.text;
       el.choices.innerHTML = '';
-      node.choices.forEach((c, idx)=>{
-        const b = document.createElement('button');
-        b.className = 'btn choice';
-        b.innerHTML = `<span>${c.label}</span>`;
-        b.setAttribute('aria-label', c.label);
-        b.addEventListener('click', ()=> choose(c));
-        b.addEventListener('keyup', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); b.click(); } });
+      node.choices.forEach(c=>{
+        const b=document.createElement('button');
+        b.className='btn choice';
+        b.textContent=c.label;
+        b.onclick=()=>choose(c);
         el.choices.appendChild(b);
       });
       el.turns.textContent = state.turns;
+      renderStats();
     }
 
     function choose(c){
-      state.turns += 1;
-      updateStats(c.effects || {});
-      state.history.push({ node: state.node, choiceLabel: c.label, effects: c.effects || {} });
-
-      // early failure if any stat hits 0
-      if(Object.values(state.stats).some(v => v <= FLOOR)){
-        return renderEnding('collapse');
-      }
-
-      if(c.next === 'EVAL' || state.turns >= MAX_TURNS){
-        return renderEnding();
-      }
-      state.node = c.next;
-      renderNode();
-      el.turns.textContent = state.turns;
+      state.turns++;
+      updateStats(c.effects);
+      state.node=c.next;
+      if(c.next==='EVAL'||state.turns>=MAX_TURNS){renderEnding();}else renderNode();
     }
 
-    function renderEnding(forced){
-      // compute weighted score
-      const weighted = Object.entries(STAT_WEIGHTS).reduce((sum, [k,w]) => sum + (state.stats[k]*w), 0);
-      const avg = weighted / Object.keys(STAT_WEIGHTS).length;
-
-      let outcome = 'balanced';
-      if(forced === 'collapse') outcome = 'collapse';
-      else if(avg >= 70 && Object.values(state.stats).every(v=>v>=55)) outcome = 'green';
-      else if(avg <= 35 || Object.values(state.stats).filter(v=>v<25).length>=2) outcome = 'collapse';
-
-      const summaries = {
-        green: {
-          title: 'Green Future',
-          tagClass: '',
-          body: 'Clean air, safe water, thriving wildlife, and a resilient economy. Your long‑term bets paid off.'
-        },
-        balanced: {
-          title: 'Balanced Future',
-          tagClass: 'warn',
-          body: 'You navigated trade‑offs. Life is stable but fragile. With better planning, your city could flourish.'
-        },
-        collapse: {
-          title: 'Collapse',
-          tagClass: 'bad',
-          body: 'Cascading failures overwhelmed systems. Lessons learned: short‑term wins can hide long‑term costs.'
-        }
-      };
-
-      const s = summaries[outcome];
-      el.sceneText.innerHTML = `
-        <div class="ending">${s.title}</div>
-        <p class="muted">${s.body}</p>
-        <div style="margin-top:12px; display:grid; gap:8px">
-          <div class="muted">Final Indicators</div>
-          ${Object.keys(state.stats).map(k=>{
-            return `<div class="stat"><div class="stat-name">${STAT_NAMES[k]}</div><div class="bar"><i style="width:${state.stats[k]}%"></i></div><div class="stat-val">${state.stats[k]}%</div></div>`;
-          }).join('')}
-        </div>
-        <div style="margin-top:14px">
-          <details>
-            <summary class="muted" style="cursor:pointer">Review your choices</summary>
-            <ol style="margin-top:8px; margin-left:18px;">
-              ${state.history.map(h=>`<li><b>${h.choiceLabel}</b><span class="muted"> — ${Object.entries(h.effects).map(([k,v])=>`${STAT_NAMES[k]} ${v>=0?'+':''}${v}`).join(', ')}</span></li>`).join('')}
-            </ol>
-          </details>
-        </div>
-      `;
-      el.choices.innerHTML = '';
-      const again = document.createElement('button');
-      again.className = 'btn btn-primary';
-      again.textContent = 'Play Again';
-      again.addEventListener('click', restart);
-      el.choices.appendChild(again);
-
-      // Tag
-      el.turns.textContent = state.turns;
-      el.turnsTag.querySelector('b').textContent = state.turns;
-      el.statusTag.style.display = 'inline-flex';
-      el.statusTag.className = 'tag ' + s.tagClass;
-      el.statusTag.textContent = s.title;
+    function renderEnding(){
+      el.choices.innerHTML='';
+      let avg=Object.values(state.stats).reduce((a,b)=>a+b,0)/4;
+      let title='Balanced Future',body='You navigated trade-offs.';
+      if(avg>=70) { title='Green Future'; body='Your city thrives sustainably!'; }
+      else if(avg<=35) { title='Collapse'; body='Systems failed. Lessons learned.'; }
+      el.sceneText.innerHTML=`<div class="ending">${title}</div><p class="muted">${body}</p>`;
+      renderStats();
     }
 
-    // Buttons
-    el.btnSave.addEventListener('click', save);
-    el.btnLoad.addEventListener('click', load);
-    el.btnRestart.addEventListener('click', restart);
+    document.getElementById('btn-restart').onclick=()=>{ Object.assign(state,{ stats:{...INITIAL_STATS},turns:0,node:'start',history:[] }); renderNode(); };
+    document.getElementById('themeToggle').onclick=()=>{ theme=(theme==='light')?'dark':'light'; document.body.setAttribute('data-theme',theme); localStorage.setItem('ecolearn_theme',theme); };
 
-    // Initial render
     renderNode();
-    updateStats();
   })();
   </script>
 </body>
